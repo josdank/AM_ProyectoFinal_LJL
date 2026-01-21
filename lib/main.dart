@@ -37,6 +37,18 @@ void main() async {
   } catch (e) {
     print('❌ Error inicializando Supabase: $e');
   }
+// Test de conexión
+try {
+  final response = await Supabase.instance.client
+      .from('profiles')
+      .select('count')
+      .count(CountOption.exact);
+  
+    print('✅ Conexión a Supabase exitosa');
+    print('📊 Perfiles en DB: ${response.count}');
+  } catch (e) {
+    print('❌ Error de conexión: $e');
+  }
 
   // 3. Inicializar dependencias
   await di.initDependencies();
