@@ -11,32 +11,47 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  
   # ESTADO Y ARQUITECTURA (Clean Architecture)
   flutter_bloc: ^8.1.6
-  equatable: ^2.0.7
+  equatable: ^2.0.8
   get_it: ^7.7.0
+  dartz: ^0.10.1  # NUEVO: Para Either<Failure, Success>
+  
   # BACKEND - SUPABASE
-  supabase_flutter: ^2.5.0
+  supabase_flutter: ^2.12.0
+  flutter_dotenv: ^5.2.1  # NUEVO: Para variables de entorno
+  
   # GEOLOCALIZACIÓN Y MAPAS
-  geolocator: ^13.0.4                    # GPS y ubicación
-  flutter_map: ^7.0.2                    # OpenStreetMap
-  latlong2: ^0.9.1                       # Coordenadas
-  http: ^1.2.2                           # Para API de OpenStreetMap
+  geolocator: ^13.0.4
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  http: ^1.6.0
+  
   # NOTIFICACIONES
   flutter_local_notifications: ^17.2.4
+  
   # PERMISOS
   permission_handler: ^11.4.0
+  
   # IMÁGENES Y MULTIMEDIA
-  image_picker: ^1.1.2
-  cached_network_image: ^3.4.1  
+  image_picker: ^1.2.1
+  cached_network_image: ^3.4.1
+  
   # ALMACENAMIENTO LOCAL
-  shared_preferences: ^2.3.2
+  shared_preferences: ^2.5.4
+  
   # UI Y UTILIDADES
-  intl: ^0.20.2                          # Formateo de fechas
-  shimmer: ^3.0.0                        # Loading skeleton
-  table_calendar: ^3.1.2                 # Calendario para visitas
+  intl: ^0.20.2
+  shimmer: ^3.0.0
+  table_calendar: ^3.2.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env  # NUEVO: Archivo para variables de entorno

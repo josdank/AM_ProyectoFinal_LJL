@@ -134,6 +134,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "dartz",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/dartz-0.10.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "dbus",
       "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/dbus-0.7.11",
       "packageUri": "lib/",
@@ -216,6 +222,12 @@
       "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_cache_manager-3.4.1",
       "packageUri": "lib/",
       "languageVersion": "3.0"
+    },
+    {
+      "name": "flutter_dotenv",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_dotenv-5.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "flutter_lints",
