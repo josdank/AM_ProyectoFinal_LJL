@@ -7,8 +7,11 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'core/di/injection_container.dart' as di;
 
 // Auth
+import 'core/di/injection_container.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/login_page.dart';
+import 'features/profile/presentation/bloc/profile_bloc.dart';
+import 'features/profile/presentation/pages/profile_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,13 +40,13 @@ void main() async {
   } catch (e) {
     print('❌ Error inicializando Supabase: $e');
   }
-// Test de conexión
-try {
-  final response = await Supabase.instance.client
-      .from('profiles')
-      .select('count')
-      .count(CountOption.exact);
-  
+  // Test de conexión
+  try {
+    final response = await Supabase.instance.client
+        .from('profiles')
+        .select('count')
+        .count(CountOption.exact);
+
     print('✅ Conexión a Supabase exitosa');
     print('📊 Perfiles en DB: ${response.count}');
   } catch (e) {
@@ -70,12 +73,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!envLoaded || !supabaseInitialized) {
-      return MaterialApp(
+      return const MaterialApp(
         home: Scaffold(
           body: Center(
             child: Text(
               'Error de configuración. Revisa tu archivo .env y la conexión a Supabase.',
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Colors.red),
               textAlign: TextAlign.center,
             ),
           ),
@@ -165,93 +168,117 @@ class SplashScreen extends StatelessWidget {
   }
 }
 
-/// Home Page temporal (reemplazar con tu diseño)
+// En lib/main.dart
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inicio'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (dialogContext) => AlertDialog(
-                  title: const Text('Cerrar Sesión'),
-                  content: const Text('¿Estás seguro?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                      child: const Text('Cancelar'),
+    return BlocProvider(
+      create: (context) => sl<ProfileBloc>(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Busca Compañero'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.person),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider.value(
+                      value: context.read<ProfileBloc>(),
+                      child: const ProfilePage(),
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(dialogContext).pop();
-                        context.read<AuthBloc>().add(
-                          const AuthLogoutRequested(),
-                        );
-                      },
-                      child: const Text('Cerrar Sesión'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          if (state is AuthAuthenticated) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.check_circle_outline,
-                      size: 100,
-                      color: Colors.green,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      '¡Bienvenido!',
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.user.email,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleLarge?.copyWith(color: Colors.grey),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (state.user.fullName != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        state.user.fullName!,
-                        style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('Cerrar Sesión'),
+                    content: const Text('¿Estás seguro?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        child: const Text('Cancelar'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                          context.read<AuthBloc>().add(
+                            const AuthLogoutRequested(),
+                          );
+                        },
+                        child: const Text('Cerrar Sesión'),
                       ),
                     ],
-                    const SizedBox(height: 48),
-                    const Text(
-                      '🎉 Sistema de autenticación funcionando correctamente',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        body: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            if (state is AuthAuthenticated) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline,
+                        size: 100,
+                        color: Colors.green,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        '¡Bienvenido!',
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        state.user.email,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleLarge?.copyWith(color: Colors.grey),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 48),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => BlocProvider.value(
+                                value: context.read<ProfileBloc>(),
+                                child: const ProfilePage(),
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.person),
+                        label: const Text('Ver Mi Perfil'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }
-          return const Center(child: CircularProgressIndicator());
-        },
+              );
+            }
+            return const Center(child: CircularProgressIndicator());
+          },
+        ),
       ),
     );
   }

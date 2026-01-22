@@ -16,7 +16,7 @@ class UserModel extends User {
       email: user.email!,
       fullName: user.userMetadata?['full_name'] as String?,
       emailConfirmed: user.emailConfirmedAt != null,
-      createdAt: user.createdAt != null ? DateTime.parse(user.createdAt!) : null,
+      createdAt: DateTime.parse(user.createdAt!),
     );
   }
 
