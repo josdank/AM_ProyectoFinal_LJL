@@ -17,7 +17,7 @@ class QuestionnaireDatasourceImpl implements QuestionnaireDatasource {
   Future<HabitsModel> getUserHabits(String userId) async {
     try {
       final response = await client
-          .from('habits')
+          .from('habits')  // ✅ Tabla correcta
           .select()
           .eq('user_id', userId)
           .single();
@@ -25,7 +25,9 @@ class QuestionnaireDatasourceImpl implements QuestionnaireDatasource {
       return HabitsModel.fromJson(response);
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST116') {
-        throw const ServerException(message: 'Usuario no ha completado el cuestionario');
+        throw const ServerException(
+          message: 'Usuario no ha completado el cuestionario',
+        );
       }
       throw ServerException(message: e.message);
     } catch (e) {
@@ -38,16 +40,26 @@ class QuestionnaireDatasourceImpl implements QuestionnaireDatasource {
     try {
       final data = habits.toJson();
       
+      // ✅ Asegurar que user_id esté presente
+      data['user_id'] = habits.userId;
+      data['updated_at'] = DateTime.now().toIso8601String();
+      
+      // Si no tiene ID, es nuevo
+      if (data['id'] == null || data['id'].toString().isEmpty) {
+        data.remove('id');  // Dejar que Supabase genere el ID
+        data['created_at'] = DateTime.now().toIso8601String();
+      }
+
       // Intentar hacer upsert (insertar o actualizar)
       final response = await client
           .from('habits')
-          .upsert(data, onConflict: 'user_id')
+          .upsert(data, onConflict: 'user_id')  // ✅ Conflicto en user_id
           .select()
           .single();
 
       return HabitsModel.fromJson(response);
     } on PostgrestException catch (e) {
-      throw ServerException(message: e.message);
+      throw ServerException(message: 'Error de base de datos: ${e.message}');
     } catch (e) {
       throw ServerException(message: 'Error al guardar hábitos: $e');
     }
@@ -71,3 +83,4 @@ class QuestionnaireDatasourceImpl implements QuestionnaireDatasource {
     }
   }
 }
+

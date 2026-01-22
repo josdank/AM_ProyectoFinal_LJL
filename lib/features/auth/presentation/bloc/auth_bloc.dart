@@ -1,7 +1,3 @@
-// ==========================================
-// lib/features/auth/presentation/bloc/auth_bloc.dart
-// ==========================================
-
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';

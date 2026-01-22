@@ -22,11 +22,14 @@ class ProfileDatasourceImpl implements ProfileDatasource {
       final response = await client
           .from('profiles')
           .select()
-          .eq('user_id', userId)
+          .eq('user_id', userId)  // ✅ Cambiado de 'id' a 'user_id'
           .single();
 
       return ProfileModel.fromJson(response);
     } on PostgrestException catch (e) {
+      if (e.code == 'PGRST116') {
+        throw const ServerException(message: 'Perfil no encontrado');
+      }
       throw ServerException(message: e.message);
     } catch (e) {
       throw ServerException(message: 'Error al obtener perfil: $e');
@@ -63,7 +66,7 @@ class ProfileDatasourceImpl implements ProfileDatasource {
       final response = await client
           .from('profiles')
           .update(data)
-          .eq('user_id', profile.userId)
+          .eq('user_id', profile.userId)  // ✅ Usar user_id
           .select()
           .single();
 
@@ -80,10 +83,11 @@ class ProfileDatasourceImpl implements ProfileDatasource {
     try {
       final bytes = await photo.readAsBytes();
       final fileExt = photo.name.split('.').last;
-      final fileName = '$userId-${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-      final filePath = 'profile_photos/$fileName';
+      final fileName = '$userId/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+      final filePath = fileName;  // ✅ Simplificado
 
-      await client.storage.from('profiles').uploadBinary(
+      // ✅ CORRECCIÓN: Usar 'profile-photos' en lugar de 'profiles'
+      await client.storage.from('profile-photos').uploadBinary(
             filePath,
             bytes,
             fileOptions: FileOptions(
@@ -92,12 +96,15 @@ class ProfileDatasourceImpl implements ProfileDatasource {
             ),
           );
 
-      final publicUrl = client.storage.from('profiles').getPublicUrl(filePath);
+      final publicUrl = client.storage.from('profile-photos').getPublicUrl(filePath);
 
       // Actualizar la URL en el perfil
       await client
           .from('profiles')
-          .update({'photo_url': publicUrl, 'updated_at': DateTime.now().toIso8601String()})
+          .update({
+            'photo_url': publicUrl,  // ✅ Usar photo_url
+            'updated_at': DateTime.now().toIso8601String()
+          })
           .eq('user_id', userId);
 
       return publicUrl;
@@ -117,15 +124,24 @@ class ProfileDatasourceImpl implements ProfileDatasource {
       if (profile.photoUrl != null) {
         // Extraer el path del archivo de la URL
         final uri = Uri.parse(profile.photoUrl!);
-        final path = uri.pathSegments.skip(uri.pathSegments.indexOf('profiles') + 1).join('/');
+        final pathSegments = uri.pathSegments;
         
-        // Eliminar de storage
-        await client.storage.from('profiles').remove([path]);
+        // Buscar el índice de 'profile-photos' en los segmentos
+        final bucketIndex = pathSegments.indexOf('profile-photos');
+        if (bucketIndex != -1 && bucketIndex < pathSegments.length - 1) {
+          final path = pathSegments.skip(bucketIndex + 1).join('/');
+          
+          // Eliminar de storage
+          await client.storage.from('profile-photos').remove([path]);
+        }
         
         // Actualizar perfil
         await client
             .from('profiles')
-            .update({'photo_url': null, 'updated_at': DateTime.now().toIso8601String()})
+            .update({
+              'photo_url': null,
+              'updated_at': DateTime.now().toIso8601String()
+            })
             .eq('user_id', userId);
       }
     } on StorageException catch (e) {

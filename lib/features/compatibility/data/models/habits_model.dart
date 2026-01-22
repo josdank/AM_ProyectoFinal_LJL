@@ -46,7 +46,9 @@ class HabitsModel extends Habits {
       sharedCommonAreas: json['shared_common_areas'] as bool,
       sharedKitchenware: json['shared_kitchenware'] as bool,
       temperaturePreference: json['temperature_preference'] as String,
-      hobbies: (json['hobbies'] as List<dynamic>).cast<String>(),
+      hobbies: json['hobbies'] != null 
+          ? List<String>.from(json['hobbies'] as List)
+          : [],
       musicVolume: json['music_volume'] as int,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -55,7 +57,7 @@ class HabitsModel extends Habits {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      if (id.isNotEmpty) 'id': id,  // ✅ Solo incluir si tiene ID
       'user_id': userId,
       'sleep_schedule': sleepSchedule,
       'noise_tolerance_level': noiseToleranceLevel,
