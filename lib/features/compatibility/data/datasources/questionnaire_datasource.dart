@@ -17,7 +17,7 @@ class QuestionnaireDatasourceImpl implements QuestionnaireDatasource {
   Future<HabitsModel> getUserHabits(String userId) async {
     try {
       final response = await client
-          .from('habits')  // ✅ Tabla correcta
+          .from('habits')
           .select()
           .eq('user_id', userId)
           .single();
@@ -42,18 +42,21 @@ class QuestionnaireDatasourceImpl implements QuestionnaireDatasource {
       
       // ✅ Asegurar que user_id esté presente
       data['user_id'] = habits.userId;
-      data['updated_at'] = DateTime.now().toIso8601String();
       
-      // Si no tiene ID, es nuevo
-      if (data['id'] == null || data['id'].toString().isEmpty) {
-        data.remove('id');  // Dejar que Supabase genere el ID
-        data['created_at'] = DateTime.now().toIso8601String();
-      }
+      // ✅ NO incluir timestamps - Supabase los maneja automáticamente
+      data.remove('created_at');
+      data.remove('updated_at');
+      
+      // ✅ NO incluir id - Supabase lo genera
+      data.remove('id');
 
-      // Intentar hacer upsert (insertar o actualizar)
+      // ✅ Upsert: inserta si no existe, actualiza si existe (basado en user_id UNIQUE)
       final response = await client
           .from('habits')
-          .upsert(data, onConflict: 'user_id')  // ✅ Conflicto en user_id
+          .upsert(
+            data,
+            onConflict: 'user_id',  // ✅ Clave UNIQUE
+          )
           .select()
           .single();
 
@@ -83,4 +86,3 @@ class QuestionnaireDatasourceImpl implements QuestionnaireDatasource {
     }
   }
 }
-

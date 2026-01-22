@@ -57,7 +57,8 @@ class HabitsModel extends Habits {
 
   Map<String, dynamic> toJson() {
     return {
-      if (id.isNotEmpty) 'id': id,  // ✅ Solo incluir si tiene ID
+      // ❌ ELIMINADO: if (id.isNotEmpty) 'id': id,
+      // ✅ SIEMPRE incluir user_id (es la clave UNIQUE)
       'user_id': userId,
       'sleep_schedule': sleepSchedule,
       'noise_tolerance_level': noiseToleranceLevel,
@@ -77,8 +78,7 @@ class HabitsModel extends Habits {
       'temperature_preference': temperaturePreference,
       'hobbies': hobbies,
       'music_volume': musicVolume,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      // ✅ NO incluir created_at/updated_at - Supabase los maneja
     };
   }
 
