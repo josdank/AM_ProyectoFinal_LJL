@@ -22,114 +22,110 @@ class ProfilePage extends StatelessWidget {
           return const Scaffold(body: Center(child: Text('No autenticado')));
         }
 
-        return BlocProvider(
-          create: (context) =>
-              context.read<ProfileBloc>()
-                ..add(ProfileLoadRequested(userId: authState.user.id)),
-          child: Scaffold(
-            appBar: AppBar(
-              title: const Text('Mi Perfil'),
-              actions: [
-                BlocBuilder<ProfileBloc, ProfileState>(
-                  builder: (context, state) {
-                    if (state is ProfileLoaded) {
-                      return IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () async {
-                          final updated = await Navigator.of(context)
-                              .push<Profile>(
-                                MaterialPageRoute(
-                                  builder: (_) => BlocProvider.value(
-                                    value: context.read<ProfileBloc>(),
-                                    child: EditProfilePage(
-                                      profile: state.profile,
-                                    ),
-                                  ),
-                                ),
-                              );
-                          if (updated != null && context.mounted) {
-                            // El perfil ya se actualizó en el BLoC
-                          }
-                        },
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-            ),
-            body: BlocBuilder<ProfileBloc, ProfileState>(
-              builder: (context, state) {
-                if (state is ProfileLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (state is ProfileError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red[300],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          state.message,
-                          style: const TextStyle(fontSize: 16),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            context.read<ProfileBloc>().add(
-                              ProfileLoadRequested(userId: authState.user.id),
-                            );
-                          },
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Reintentar'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (state is ProfileLoaded) {
-                  return _ProfileContent(profile: state.profile);
-                }
-
-                return const Center(child: Text('Estado desconocido'));
-              },
-            ),
-            floatingActionButton: BlocBuilder<ProfileBloc, ProfileState>(
-              builder: (context, state) {
-                if (state is ProfileLoaded) {
-                  return FloatingActionButton.extended(
-                    onPressed: () async {
-                      final result = await Navigator.of(context).push<Habits>(
-                        MaterialPageRoute(
-                          builder: (_) => BlocProvider(
-                            create: (_) => sl<CompatibilityBloc>(),
-                            child: QuestionnairePage(
-                              userId: state.profile.id,
+        // ✅ CORRECCIÓN: NO crear un nuevo BlocProvider aquí
+        // El ProfileBloc ya existe en el contexto superior (HomePage)
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Mi Perfil'),
+            actions: [
+              BlocBuilder<ProfileBloc, ProfileState>(
+                builder: (context, state) {
+                  if (state is ProfileLoaded) {
+                    return IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () async {
+                        await Navigator.of(context).push<Profile>(
+                          MaterialPageRoute(
+                            builder: (_) => BlocProvider.value(
+                              value: context.read<ProfileBloc>(),
+                              child: EditProfilePage(profile: state.profile),
                             ),
                           ),
-                        ),
-                      );
-                      if (result != null && context.mounted) {
-                        context.read<CompatibilityBloc>().add(
-                          SaveHabitsRequested(habits: result),
                         );
-                      }
-                    },
-                    icon: const Icon(Icons.quiz),
-                    label: const Text('Cuestionario'),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+                      },
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
+          body: BlocBuilder<ProfileBloc, ProfileState>(
+            builder: (context, state) {
+              if (state is ProfileLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (state is ProfileError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red[300],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        state.message,
+                        style: const TextStyle(fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          context.read<ProfileBloc>().add(
+                            ProfileLoadRequested(userId: authState.user.id),
+                          );
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (state is ProfileLoaded) {
+                return _ProfileContent(profile: state.profile);
+              }
+
+              return const Center(child: Text('Estado desconocido'));
+            },
+          ),
+          floatingActionButton: BlocBuilder<ProfileBloc, ProfileState>(
+            builder: (context, state) {
+              if (state is ProfileLoaded) {
+                return FloatingActionButton.extended(
+                  onPressed: () async {
+                    final result = await Navigator.of(context).push<Habits>(
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider(
+                          create: (_) => sl<CompatibilityBloc>(),
+                          child: QuestionnairePage(userId: state.profile.id),
+                        ),
+                      ),
+                    );
+                    if (result != null && context.mounted) {
+                      // ✅ CREAR UN NUEVO BLOC PARA GUARDAR
+                      final compatibilityBloc = sl<CompatibilityBloc>();
+                      compatibilityBloc.add(
+                        SaveHabitsRequested(habits: result),
+                      );
+
+                      // Mostrar confirmación
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Cuestionario guardado')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.quiz),
+                  label: const Text('Cuestionario'),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
         );
       },
