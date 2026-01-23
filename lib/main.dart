@@ -4,11 +4,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'core/di/injection_container.dart' as di;
 import 'core/config/supabase_config.dart';
-import 'core/di/injection_container.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
+import 'features/listings/presentation/bloc/listing_bloc.dart';
+import 'features/listings/presentation/pages/listings_page.dart';
+import 'features/compatibility/presentation/bloc/compatibility_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +42,7 @@ void main() async {
       supabaseInitialized = true;
       print('✅ Supabase inicializado');
 
-      // ✅ CORRECCIÓN: Test de conexión (API actualizada)
+      // Test de conexión
       try {
         final response = await Supabase.instance.client
             .from('profiles')
@@ -141,7 +143,6 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
-        // ✅ MEJORA: Mostrar mensajes de error si hay problemas
         if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -209,11 +210,10 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ CORRECCIÓN: Crear ProfileBloc UNA SOLA VEZ y cargarlo automáticamente
     return BlocProvider(
       create: (context) {
         final authState = context.read<AuthBloc>().state;
-        final bloc = sl<ProfileBloc>();
+        final bloc = di.sl<ProfileBloc>();
 
         // Cargar perfil automáticamente
         if (authState is AuthAuthenticated) {
@@ -237,7 +237,7 @@ class _HomePageContent extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Busca Compañero'),
         actions: [
-          // ✅ Icono de perfil con badge si perfil incompleto
+          // Icono de perfil con badge si perfil incompleto
           BlocBuilder<ProfileBloc, ProfileState>(
             builder: (context, profileState) {
               final hasIncompleteProfile = profileState is ProfileLoaded &&
@@ -292,7 +292,11 @@ class _HomePageContent extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         profileState.message,
@@ -371,7 +375,7 @@ class _HomePageContent extends StatelessWidget {
             ),
             const SizedBox(height: 48),
 
-            // ✅ Botón principal
+            // Botón de perfil
             ElevatedButton.icon(
               onPressed: () => _navigateToProfile(context),
               icon: const Icon(Icons.person),
@@ -380,7 +384,19 @@ class _HomePageContent extends StatelessWidget {
               ),
             ),
 
-            // ✅ Mensaje si perfil incompleto
+            const SizedBox(height: 12),
+
+            // Botón de habitaciones
+            ElevatedButton.icon(
+              onPressed: () => _navigateToListings(context),
+              icon: const Icon(Icons.home_work),
+              label: const Text('Ver Habitaciones'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ),
+            ),
+
+            // Mensaje si perfil incompleto
             if (!isProfileComplete) ...[
               const SizedBox(height: 16),
               Container(
@@ -418,6 +434,19 @@ class _HomePageContent extends StatelessWidget {
         builder: (_) => BlocProvider.value(
           value: context.read<ProfileBloc>(),
           child: const ProfilePage(),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToListings(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) => di.sl<ListingBloc>()
+            ..add(const ListingsLoadRequested()),
+          child: const ListingsPage(),
         ),
       ),
     );

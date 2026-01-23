@@ -1,3 +1,4 @@
+// lib/features/listings/presentation/widgets/listing_card_widget.dart
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/listing.dart';
@@ -5,11 +6,13 @@ import '../../domain/entities/listing.dart';
 class ListingCardWidget extends StatelessWidget {
   final Listing listing;
   final VoidCallback? onTap;
+  final double? compatibilityScore;
 
   const ListingCardWidget({
     super.key,
     required this.listing,
     this.onTap,
+    this.compatibilityScore,
   });
 
   @override
@@ -23,7 +26,7 @@ class ListingCardWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Imagen
-            Stack(
+                          Stack(
               children: [
                 SizedBox(
                   height: 200,
@@ -48,6 +51,37 @@ class ListingCardWidget extends StatelessWidget {
                           child: const Icon(Icons.home, size: 60),
                         ),
                 ),
+                // Badge de compatibilidad
+                if (compatibilityScore != null)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getCompatibilityColor(compatibilityScore!),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.favorite, size: 14, color: Colors.white),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${compatibilityScore!.toInt()}%',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 // Badge de destacado
                 if (listing.isFeatured)
                   Positioned(
@@ -195,5 +229,13 @@ class ListingCardWidget extends StatelessWidget {
       visualDensity: VisualDensity.compact,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
+  }
+
+  Color _getCompatibilityColor(double score) {
+    if (score >= 80) return Colors.green;
+    if (score >= 65) return Colors.lightGreen;
+    if (score >= 50) return Colors.orange;
+    if (score >= 35) return Colors.deepOrange;
+    return Colors.red;
   }
 }
