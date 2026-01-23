@@ -1,0 +1,1 @@
+ C:\\Users\\ignne\\Desktop\\APP\ MOVILES\\PRUEBAS\\AM_ProyectoFinal_LJL\\.dart_tool\\flutter_build\\4c730f00f0d0f33fcf05d2836a781efb\\native_assets.json: 

@@ -45,9 +45,9 @@
     },
     {
       "name": "bloc",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/bloc-8.1.4",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/bloc-9.2.0",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "2.14"
     },
     {
       "name": "boolean_selector",
@@ -134,6 +134,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "dart_polylabel2",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/dart_polylabel2-1.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
       "name": "dartz",
       "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/dartz-0.10.1",
       "packageUri": "lib/",
@@ -213,9 +219,9 @@
     },
     {
       "name": "flutter_bloc",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_bloc-8.1.6",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_bloc-9.1.1",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "2.14"
     },
     {
       "name": "flutter_cache_manager",
@@ -225,39 +231,45 @@
     },
     {
       "name": "flutter_dotenv",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_dotenv-5.2.1",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_dotenv-6.0.0",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
     {
       "name": "flutter_lints",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-4.0.0",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-6.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.1"
+      "languageVersion": "3.8"
     },
     {
       "name": "flutter_local_notifications",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications-17.2.4",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications-19.5.0",
       "packageUri": "lib/",
-      "languageVersion": "2.17"
+      "languageVersion": "3.4"
     },
     {
       "name": "flutter_local_notifications_linux",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications_linux-4.0.1",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications_linux-6.0.0",
       "packageUri": "lib/",
-      "languageVersion": "2.17"
+      "languageVersion": "3.4"
     },
     {
       "name": "flutter_local_notifications_platform_interface",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications_platform_interface-7.2.0",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications_platform_interface-9.1.0",
       "packageUri": "lib/",
-      "languageVersion": "2.17"
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "flutter_local_notifications_windows",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications_windows-1.0.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
     },
     {
       "name": "flutter_map",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_map-7.0.2",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_map-8.2.2",
       "packageUri": "lib/",
-      "languageVersion": "3.0"
+      "languageVersion": "3.6"
     },
     {
       "name": "flutter_plugin_android_lifecycle",
@@ -284,20 +296,32 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "geoclue",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/geoclue-0.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.16"
+    },
+    {
       "name": "geolocator",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/geolocator-13.0.4",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/geolocator-14.0.2",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
     {
       "name": "geolocator_android",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/geolocator_android-4.6.2",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/geolocator_android-5.0.2",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
     {
       "name": "geolocator_apple",
       "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/geolocator_apple-2.3.13",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "geolocator_linux",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/geolocator_linux-0.2.4",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -321,7 +345,7 @@
     },
     {
       "name": "get_it",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/get_it-7.7.0",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/get_it-9.2.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -336,6 +360,12 @@
       "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/gotrue-2.18.0",
       "packageUri": "lib/",
       "languageVersion": "3.3"
+    },
+    {
+      "name": "gsettings",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/gsettings-0.2.8",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "gtk",
@@ -369,7 +399,7 @@
     },
     {
       "name": "image_picker_android",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_android-0.8.13+11",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_android-0.8.13+12",
       "packageUri": "lib/",
       "languageVersion": "3.9"
     },
@@ -447,9 +477,9 @@
     },
     {
       "name": "lints",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/lints-4.0.0",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/lints-6.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.1"
+      "languageVersion": "3.8"
     },
     {
       "name": "lists",
@@ -513,7 +543,7 @@
     },
     {
       "name": "objective_c",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/objective_c-9.2.3",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/objective_c-9.2.4",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },
@@ -522,6 +552,18 @@
       "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/octo_image-2.1.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
+    },
+    {
+      "name": "package_info_plus",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-9.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "package_info_plus_platform_interface",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus_platform_interface-3.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
     },
     {
       "name": "path",
@@ -567,13 +609,13 @@
     },
     {
       "name": "permission_handler",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/permission_handler-11.4.0",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/permission_handler-12.0.1",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
     {
       "name": "permission_handler_android",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/permission_handler_android-12.1.0",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/permission_handler_android-13.0.1",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -624,12 +666,6 @@
       "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/pointycastle-4.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.2"
-    },
-    {
-      "name": "polylabel",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/polylabel-1.0.1",
-      "packageUri": "lib/",
-      "languageVersion": "2.13"
     },
     {
       "name": "postgrest",
@@ -831,7 +867,7 @@
     },
     {
       "name": "timezone",
-      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/timezone-0.9.4",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/timezone-0.10.1",
       "packageUri": "lib/",
       "languageVersion": "2.19"
     },
@@ -930,6 +966,12 @@
       "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/web_socket_channel-3.0.3",
       "packageUri": "lib/",
       "languageVersion": "3.3"
+    },
+    {
+      "name": "win32",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/win32-5.15.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.8"
     },
     {
       "name": "wkt_parser",

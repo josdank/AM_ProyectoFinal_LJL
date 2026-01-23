@@ -13,26 +13,26 @@ dependencies:
   cupertino_icons: ^1.0.8
   
   # ESTADO Y ARQUITECTURA (Clean Architecture)
-  flutter_bloc: ^8.1.6
+  flutter_bloc: ^9.1.1
   equatable: ^2.0.8
-  get_it: ^7.7.0
+  get_it: ^9.2.0
   dartz: ^0.10.1  # NUEVO: Para Either<Failure, Success>
   
   # BACKEND - SUPABASE
   supabase_flutter: ^2.12.0
-  flutter_dotenv: ^5.2.1  # NUEVO: Para variables de entorno
+  flutter_dotenv: ^6.0.0  # NUEVO: Para variables de entorno
   
   # GEOLOCALIZACIÓN Y MAPAS
-  geolocator: ^13.0.4
-  flutter_map: ^7.0.2
+  geolocator: ^14.0.2
+  flutter_map: ^8.2.2
   latlong2: ^0.9.1
   http: ^1.6.0
   
   # NOTIFICACIONES
-  flutter_local_notifications: ^17.2.4
+  flutter_local_notifications: ^19.5.0
   
   # PERMISOS
-  permission_handler: ^11.4.0
+  permission_handler: ^12.0.1
   
   # IMÁGENES Y MULTIMEDIA
   image_picker: ^1.2.1
@@ -50,7 +50,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
