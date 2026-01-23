@@ -112,7 +112,7 @@ class ProfilePage extends StatelessWidget {
                           builder: (_) => BlocProvider(
                             create: (_) => sl<CompatibilityBloc>(),
                             child: QuestionnairePage(
-                              userId: state.profile.userId,
+                              userId: state.profile.id,
                             ),
                           ),
                         ),

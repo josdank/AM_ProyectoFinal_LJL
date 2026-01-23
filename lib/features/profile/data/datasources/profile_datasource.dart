@@ -17,24 +17,26 @@ class ProfileDatasourceImpl implements ProfileDatasource {
   ProfileDatasourceImpl({required this.client});
 
   @override
-  Future<ProfileModel> getProfile(String userId) async {
-    try {
-      final response = await client
-          .from('profiles')
-          .select()
-          .eq('user_id', userId)  // ✅ Cambiado de 'id' a 'user_id'
-          .single();
+  @override
+Future<ProfileModel> getProfile(String userId) async {
+  try {
+    final response = await client
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .single();
 
-      return ProfileModel.fromJson(response);
-    } on PostgrestException catch (e) {
-      if (e.code == 'PGRST116') {
-        throw const ServerException(message: 'Perfil no encontrado');
-      }
-      throw ServerException(message: e.message);
-    } catch (e) {
-      throw ServerException(message: 'Error al obtener perfil: $e');
+    return ProfileModel.fromJson(response);
+  } on PostgrestException catch (e) {
+    if (e.code == 'PGRST116') {
+      throw const ServerException(message: 'Perfil no encontrado');
     }
+    throw ServerException(message: e.message);
+  } catch (e) {
+    throw ServerException(message: 'Error al obtener perfil: $e');
   }
+}
+
 
   @override
   Future<ProfileModel> createProfile(ProfileModel profile) async {
@@ -58,25 +60,27 @@ class ProfileDatasourceImpl implements ProfileDatasource {
   }
 
   @override
-  Future<ProfileModel> updateProfile(ProfileModel profile) async {
-    try {
-      final data = profile.toJson();
-      data['updated_at'] = DateTime.now().toIso8601String();
+  @override
+Future<ProfileModel> updateProfile(ProfileModel profile) async {
+  try {
+    final data = profile.toJson();
+    data['updated_at'] = DateTime.now().toIso8601String();
 
-      final response = await client
-          .from('profiles')
-          .update(data)
-          .eq('user_id', profile.userId)  // ✅ Usar user_id
-          .select()
-          .single();
+    final response = await client
+        .from('profiles')
+        .update(data)
+        .eq('id', profile.id)
+        .select()
+        .single();
 
-      return ProfileModel.fromJson(response);
-    } on PostgrestException catch (e) {
-      throw ServerException(message: e.message);
-    } catch (e) {
-      throw ServerException(message: 'Error al actualizar perfil: $e');
-    }
+    return ProfileModel.fromJson(response);
+  } on PostgrestException catch (e) {
+    throw ServerException(message: e.message);
+  } catch (e) {
+    throw ServerException(message: 'Error al actualizar perfil: $e');
   }
+}
+
 
   @override
   Future<String> uploadProfilePhoto(XFile photo, String userId) async {
@@ -105,7 +109,7 @@ class ProfileDatasourceImpl implements ProfileDatasource {
             'photo_url': publicUrl,  // ✅ Usar photo_url
             'updated_at': DateTime.now().toIso8601String()
           })
-          .eq('user_id', userId);
+          .eq('id', userId);
 
       return publicUrl;
     } on StorageException catch (e) {
@@ -142,7 +146,7 @@ class ProfileDatasourceImpl implements ProfileDatasource {
               'photo_url': null,
               'updated_at': DateTime.now().toIso8601String()
             })
-            .eq('user_id', userId);
+            .eq('id', userId);
       }
     } on StorageException catch (e) {
       throw ServerException(message: 'Error al eliminar foto: ${e.message}');

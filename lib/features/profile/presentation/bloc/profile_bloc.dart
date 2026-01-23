@@ -30,7 +30,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ) async {
     emit(const ProfileLoading());
 
-    final result = await getProfile(GetProfileParams(userId: event.userId));
+    final result = await getProfile(
+      GetProfileParams(userId: event.userId),
+    );
 
     result.fold(
       (failure) => emit(ProfileError(message: failure.message)),
@@ -67,15 +69,14 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final result = await uploadProfilePhoto(
         UploadProfilePhotoParams(
           photo: event.photo,
-          userId: event.userId,
+          userId: currentProfile.id, // 🔥 AQUÍ LA CORRECCIÓN
         ),
       );
 
       result.fold(
         (failure) => emit(ProfileError(message: failure.message)),
-        (photoUrl) {
-          // Recargar el perfil después de subir la foto
-          add(ProfileLoadRequested(userId: currentProfile.userId));
+        (_) {
+          add(ProfileLoadRequested(userId: currentProfile.id));
         },
       );
     }

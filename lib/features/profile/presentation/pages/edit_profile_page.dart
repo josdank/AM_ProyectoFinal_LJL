@@ -74,7 +74,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       context.read<ProfileBloc>().add(
             ProfilePhotoUploadRequested(
               photo: image,
-              userId: widget.profile.userId,
+              userId: widget.profile.id,
             ),
           );
     }
@@ -89,25 +89,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       final updatedProfile = Profile(
         id: widget.profile.id,
-        userId: widget.profile.userId,
         fullName: _fullNameController.text.trim(),
         bio: _bioController.text.trim().isEmpty ? null : _bioController.text.trim(),
         photoUrl: widget.profile.photoUrl,
         birthDate: _selectedBirthDate,
         gender: _selectedGender,
-        occupation: _occupationController.text.trim().isEmpty 
-            ? null 
+        occupation: _occupationController.text.trim().isEmpty
+            ? null
             : _occupationController.text.trim(),
-        university: _universityController.text.trim().isEmpty 
-            ? null 
+        university: _universityController.text.trim().isEmpty
+            ? null
             : _universityController.text.trim(),
-        phoneNumber: _phoneController.text.trim().isEmpty 
-            ? null 
+        phoneNumber: _phoneController.text.trim().isEmpty
+            ? null
             : _phoneController.text.trim(),
         isProfileComplete: isComplete,
         createdAt: widget.profile.createdAt,
         updatedAt: DateTime.now(),
       );
+
 
       context.read<ProfileBloc>().add(
             ProfileUpdateRequested(profile: updatedProfile),

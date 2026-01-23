@@ -29,7 +29,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final profileModel = ProfileModel(
         id: profile.id,
-        userId: profile.userId,
         fullName: profile.fullName,
         bio: profile.bio,
         photoUrl: profile.photoUrl,
@@ -57,7 +56,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final profileModel = ProfileModel(
         id: profile.id,
-        userId: profile.userId,
         fullName: profile.fullName,
         bio: profile.bio,
         photoUrl: profile.photoUrl,

@@ -48,6 +48,21 @@ import '../../features/listings/domain/usecases/search_listings.dart';
 import '../../features/listings/domain/usecases/update_listing.dart';
 import '../../features/listings/presentation/bloc/listing_bloc.dart';
 
+// ============================================
+// AGREGAR ESTOS IMPORTS AL ARCHIVO EXISTENTE
+// ============================================
+
+// CHAT FEATURE
+import '../../features/chat/data/datasources/chat_datasource.dart';
+import '../../features/chat/data/repositories/chat_repository_impl.dart';
+import '../../features/chat/domain/repositories/chat_repository.dart';
+import '../../features/chat/domain/usecases/get_chat_rooms.dart';
+import '../../features/chat/domain/usecases/get_messages.dart';
+import '../../features/chat/domain/usecases/send_message.dart';
+import '../../features/chat/domain/usecases/listen_to_messages.dart';
+import '../../features/chat/domain/usecases/mark_as_read.dart';
+import '../../features/chat/presentation/bloc/chat_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -155,5 +170,32 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<ListingDatasource>(
     () => ListingDatasourceImpl(client: sl()),
+  );
+
+  // ============================================
+  // CHAT FEATURE
+  // ============================================
+  sl.registerFactory(
+    () => ChatBloc(
+      getChatRooms: sl(),
+      getMessages: sl(),
+      sendMessage: sl(),
+      listenToMessages: sl(),
+      markAsRead: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton(() => GetChatRooms(sl()));
+  sl.registerLazySingleton(() => GetMessages(sl()));
+  sl.registerLazySingleton(() => SendMessage(sl()));
+  sl.registerLazySingleton(() => ListenToMessages(sl()));
+  sl.registerLazySingleton(() => MarkAsRead(sl()));
+
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(datasource: sl()),
+  );
+
+  sl.registerLazySingleton<ChatDatasource>(
+    () => ChatDatasourceImpl(client: sl()),
   );
 }
