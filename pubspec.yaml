@@ -56,3 +56,4 @@ flutter:
   uses-material-design: true
   assets:
     - .env  # NUEVO: Archivo para variables de entorno
+    - assets/Logo_app.png

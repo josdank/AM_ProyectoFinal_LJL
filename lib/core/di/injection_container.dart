@@ -1,5 +1,35 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../../features/connections/data/datasources/connection_datasource.dart';
+import '../../features/connections/data/repositories/connection_repository_impl.dart';
+import '../../features/connections/domain/repositories/connection_repository.dart';
+import '../../features/connections/domain/usecases/accept_interest.dart';
+import '../../features/connections/domain/usecases/get_incoming_interests.dart';
+import '../../features/connections/domain/usecases/get_matches.dart';
+import '../../features/connections/domain/usecases/get_outgoing_interests.dart';
+import '../../features/connections/domain/usecases/reject_interest.dart';
+import '../../features/connections/domain/usecases/send_interest.dart';
+import '../../features/connections/presentation/bloc/connection_bloc.dart';
+import '../../features/security/data/datasources/security_datasource.dart';
+import '../../features/security/data/repositories/security_repository_impl.dart';
+import '../../features/security/domain/repositories/security_repository.dart';
+import '../../features/security/domain/usecases/block_user.dart';
+import '../../features/security/domain/usecases/get_blocked_users.dart';
+import '../../features/security/domain/usecases/get_verification_status.dart';
+import '../../features/security/domain/usecases/report_user.dart';
+import '../../features/security/domain/usecases/submit_verification.dart';
+import '../../features/security/presentation/bloc/security_bloc.dart';
+import '../../features/notifications/data/datasources/notification_datasource.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../../features/notifications/domain/usecases/create_in_app_notification.dart';
+import '../../features/notifications/domain/usecases/get_my_notifications.dart';
+import '../../features/notifications/domain/usecases/init_notifications.dart';
+import '../../features/notifications/domain/usecases/mark_notification_read.dart';
+import '../../features/notifications/domain/usecases/schedule_local_notification.dart';
+import '../../features/notifications/domain/usecases/show_local_notification.dart';
+import '../../features/notifications/presentation/bloc/notification_bloc.dart';
 
 // ============================================
 // AUTH FEATURE
@@ -69,6 +99,82 @@ Future<void> initDependencies() async {
   // ============================================
   // EXTERNAL
   // ============================================
+  // ===== Connections (Actividad 2) =====
+  sl.registerLazySingleton<ConnectionDatasource>(
+    () => ConnectionDatasourceImpl(client: sl<SupabaseClient>()),
+  );
+  sl.registerLazySingleton<ConnectionRepository>(
+    () => ConnectionRepositoryImpl(datasource: sl<ConnectionDatasource>()),
+  );
+  sl.registerLazySingleton(() => SendInterest(sl<ConnectionRepository>()));
+  sl.registerLazySingleton(() => AcceptInterest(sl<ConnectionRepository>()));
+  sl.registerLazySingleton(() => RejectInterest(sl<ConnectionRepository>()));
+  sl.registerLazySingleton(() => GetIncomingInterests(sl<ConnectionRepository>()));
+  sl.registerLazySingleton(() => GetOutgoingInterests(sl<ConnectionRepository>()));
+  sl.registerLazySingleton(() => GetMatches(sl<ConnectionRepository>()));
+
+  sl.registerFactory(
+    () => ConnectionBloc(
+      sendInterest: sl<SendInterest>(),
+      acceptInterest: sl<AcceptInterest>(),
+      rejectInterest: sl<RejectInterest>(),
+      getIncoming: sl<GetIncomingInterests>(),
+      getOutgoing: sl<GetOutgoingInterests>(),
+      getMatches: sl<GetMatches>(),
+    ),
+  );
+
+  // ===== Verification & Security (Actividad 5) =====
+  sl.registerLazySingleton<SecurityDatasource>(
+    () => SecurityDatasourceImpl(client: sl<SupabaseClient>()),
+  );
+  sl.registerLazySingleton<SecurityRepository>(
+    () => SecurityRepositoryImpl(datasource: sl<SecurityDatasource>()),
+  );
+  sl.registerLazySingleton(() => GetVerificationStatus(sl<SecurityRepository>()));
+  sl.registerLazySingleton(() => SubmitVerification(sl<SecurityRepository>()));
+  sl.registerLazySingleton(() => ReportUser(sl<SecurityRepository>()));
+  sl.registerLazySingleton(() => BlockUser(sl<SecurityRepository>()));
+  sl.registerLazySingleton(() => GetBlockedUsers(sl<SecurityRepository>()));
+
+  sl.registerFactory(
+    () => SecurityBloc(
+      getVerificationStatus: sl<GetVerificationStatus>(),
+      submitVerification: sl<SubmitVerification>(),
+      reportUser: sl<ReportUser>(),
+      blockUser: sl<BlockUser>(),
+      getBlockedUsers: sl<GetBlockedUsers>(),
+    ),
+  );
+
+  // ===== Notifications (Actividad 7) =====
+  sl.registerLazySingleton(() => FlutterLocalNotificationsPlugin());
+  sl.registerLazySingleton<NotificationDatasource>(
+    () => NotificationDatasourceImpl(
+      plugin: sl<FlutterLocalNotificationsPlugin>(),
+      client: sl<SupabaseClient>(),
+    ),
+  );
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(datasource: sl<NotificationDatasource>()),
+  );
+  sl.registerLazySingleton(() => InitNotifications(sl<NotificationRepository>()));
+  sl.registerLazySingleton(() => GetMyNotifications(sl<NotificationRepository>()));
+  sl.registerLazySingleton(() => MarkNotificationRead(sl<NotificationRepository>()));
+  sl.registerLazySingleton(() => ShowLocalNotification(sl<NotificationRepository>()));
+  sl.registerLazySingleton(() => ScheduleLocalNotification(sl<NotificationRepository>()));
+  sl.registerLazySingleton(() => CreateInAppNotification(sl<NotificationRepository>()));
+
+  sl.registerFactory(
+    () => NotificationBloc(
+      initNotifications: sl<InitNotifications>(),
+      getMyNotifications: sl<GetMyNotifications>(),
+      markRead: sl<MarkNotificationRead>(),
+      showLocal: sl<ShowLocalNotification>(),
+      createInApp: sl<CreateInAppNotification>(),
+      repository: sl<NotificationRepository>(),
+    ),
+  );
   sl.registerLazySingleton<SupabaseClient>(
     () => Supabase.instance.client,
   );

@@ -22,7 +22,7 @@ class ProfilePage extends StatelessWidget {
           return const Scaffold(body: Center(child: Text('No autenticado')));
         }
 
-        // ✅ CORRECCIÓN: NO crear un nuevo BlocProvider aquí
+        // CORRECCIÓN: NO crear un nuevo BlocProvider aquí
         // El ProfileBloc ya existe en el contexto superior (HomePage)
         return Scaffold(
           appBar: AppBar(
@@ -108,7 +108,7 @@ class ProfilePage extends StatelessWidget {
                       ),
                     );
                     if (result != null && context.mounted) {
-                      // ✅ CREAR UN NUEVO BLOC PARA GUARDAR
+                      // CREAR UN NUEVO BLOC PARA GUARDAR
                       final compatibilityBloc = sl<CompatibilityBloc>();
                       compatibilityBloc.add(
                         SaveHabitsRequested(habits: result),

@@ -88,9 +88,9 @@ Future<ProfileModel> updateProfile(ProfileModel profile) async {
       final bytes = await photo.readAsBytes();
       final fileExt = photo.name.split('.').last;
       final fileName = '$userId/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-      final filePath = fileName;  // ✅ Simplificado
+      final filePath = fileName;  // Simplificado
 
-      // ✅ CORRECCIÓN: Usar 'profile-photos' en lugar de 'profiles'
+      // CORRECCIÓN: Usar 'profile-photos' en lugar de 'profiles'
       await client.storage.from('profile-photos').uploadBinary(
             filePath,
             bytes,
@@ -106,7 +106,7 @@ Future<ProfileModel> updateProfile(ProfileModel profile) async {
       await client
           .from('profiles')
           .update({
-            'photo_url': publicUrl,  // ✅ Usar photo_url
+            'photo_url': publicUrl,  // Usar photo_url
             'updated_at': DateTime.now().toIso8601String()
           })
           .eq('id', userId);
