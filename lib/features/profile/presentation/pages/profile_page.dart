@@ -108,15 +108,38 @@ class ProfilePage extends StatelessWidget {
                       ),
                     );
                     if (result != null && context.mounted) {
-                      // ✅ CREAR UN NUEVO BLOC PARA GUARDAR
+                      // Guardar el cuestionario
                       final compatibilityBloc = sl<CompatibilityBloc>();
                       compatibilityBloc.add(
                         SaveHabitsRequested(habits: result),
                       );
 
-                      // Mostrar confirmación
+                      // ✅ NUEVO: Actualizar el perfil para marcar como completo
+                      final updatedProfile = Profile(
+                        id: state.profile.id,
+                        fullName: state.profile.fullName,
+                        bio: state.profile.bio,
+                        photoUrl: state.profile.photoUrl,
+                        birthDate: state.profile.birthDate,
+                        gender: state.profile.gender,
+                        occupation: state.profile.occupation,
+                        university: state.profile.university,
+                        phoneNumber: state.profile.phoneNumber,
+                        isProfileComplete: true,
+                        createdAt: state.profile.createdAt,
+                        updatedAt: DateTime.now(),
+                      );
+
+                      context.read<ProfileBloc>().add(
+                        ProfileUpdateRequested(profile: updatedProfile),
+                      );
+
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Cuestionario guardado')),
+                        const SnackBar(
+                          content: Text(
+                            'Cuestionario guardado y perfil actualizado',
+                          ),
+                        ),
                       );
                     }
                   },

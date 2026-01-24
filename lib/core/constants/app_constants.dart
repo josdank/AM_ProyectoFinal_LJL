@@ -177,4 +177,4 @@ class AppConstants {
     final age = DateTime.now().year - birthDate.year;
     return age >= minAge;
   }
-}
+} 

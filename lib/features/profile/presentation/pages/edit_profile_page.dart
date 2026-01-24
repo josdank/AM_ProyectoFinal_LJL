@@ -21,7 +21,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _occupationController;
   late TextEditingController _universityController;
   late TextEditingController _phoneController;
-  
+
   DateTime? _selectedBirthDate;
   String? _selectedGender;
 
@@ -30,9 +30,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.initState();
     _fullNameController = TextEditingController(text: widget.profile.fullName);
     _bioController = TextEditingController(text: widget.profile.bio ?? '');
-    _occupationController = TextEditingController(text: widget.profile.occupation ?? '');
-    _universityController = TextEditingController(text: widget.profile.university ?? '');
-    _phoneController = TextEditingController(text: widget.profile.phoneNumber ?? '');
+    _occupationController = TextEditingController(
+      text: widget.profile.occupation ?? '',
+    );
+    _universityController = TextEditingController(
+      text: widget.profile.university ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: widget.profile.phoneNumber ?? '',
+    );
     _selectedBirthDate = widget.profile.birthDate;
     _selectedGender = widget.profile.gender;
   }
@@ -50,7 +56,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _selectBirthDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedBirthDate ?? DateTime.now().subtract(const Duration(days: 365 * 20)),
+      initialDate:
+          _selectedBirthDate ??
+          DateTime.now().subtract(const Duration(days: 365 * 20)),
       firstDate: DateTime(1950),
       lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
     );
@@ -72,25 +80,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (image != null && mounted) {
       context.read<ProfileBloc>().add(
-            ProfilePhotoUploadRequested(
-              photo: image,
-              userId: widget.profile.id,
-            ),
-          );
+        ProfilePhotoUploadRequested(photo: image, userId: widget.profile.id),
+      );
     }
   }
 
   void _saveProfile() {
     if (_formKey.currentState!.validate()) {
+      // ✅ Verificar campos obligatorios
+      if (_selectedBirthDate == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('La fecha de nacimiento es obligatoria'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_selectedGender == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('El género es obligatorio'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       // Verificar si el perfil está completo
-      final isComplete = _fullNameController.text.isNotEmpty &&
+      final isComplete =
+          _fullNameController.text.isNotEmpty &&
           _selectedBirthDate != null &&
           _selectedGender != null;
 
       final updatedProfile = Profile(
         id: widget.profile.id,
         fullName: _fullNameController.text.trim(),
-        bio: _bioController.text.trim().isEmpty ? null : _bioController.text.trim(),
+        bio: _bioController.text.trim().isEmpty
+            ? null
+            : _bioController.text.trim(),
         photoUrl: widget.profile.photoUrl,
         birthDate: _selectedBirthDate,
         gender: _selectedGender,
@@ -108,10 +137,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         updatedAt: DateTime.now(),
       );
 
-
       context.read<ProfileBloc>().add(
-            ProfileUpdateRequested(profile: updatedProfile),
-          );
+        ProfileUpdateRequested(profile: updatedProfile),
+      );
     }
   }
 
@@ -121,18 +149,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         title: const Text('Editar Perfil'),
         actions: [
-          TextButton(
-            onPressed: _saveProfile,
-            child: const Text('Guardar'),
-          ),
+          TextButton(onPressed: _saveProfile, child: const Text('Guardar')),
         ],
       ),
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
           if (state is ProfileLoaded) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Perfil actualizado')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Perfil actualizado')));
             Navigator.of(context).pop(state.profile);
           } else if (state is ProfileError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -144,7 +169,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
           }
         },
         builder: (context, state) {
-          final isLoading = state is ProfileUpdating || state is ProfileUploadingPhoto;
+          final isLoading =
+              state is ProfileUpdating || state is ProfileUploadingPhoto;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -170,9 +196,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           bottom: 0,
                           right: 0,
                           child: CircleAvatar(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
                             child: IconButton(
-                              icon: const Icon(Icons.camera_alt, color: Colors.white),
+                              icon: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                              ),
                               onPressed: isLoading ? null : _pickImage,
                             ),
                           ),
@@ -222,12 +253,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         prefixIcon: const Icon(Icons.cake),
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.calendar_today),
-                          onPressed: isLoading ? null : () => _selectBirthDate(context),
+                          onPressed: isLoading
+                              ? null
+                              : () => _selectBirthDate(context),
                         ),
                       ),
                       child: Text(
                         _selectedBirthDate != null
-                            ? DateFormat('dd/MM/yyyy').format(_selectedBirthDate!)
+                            ? DateFormat(
+                                'dd/MM/yyyy',
+                              ).format(_selectedBirthDate!)
                             : 'Selecciona tu fecha de nacimiento',
                         style: TextStyle(
                           color: _selectedBirthDate != null
@@ -247,10 +282,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       prefixIcon: Icon(Icons.wc),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'Masculino', child: Text('Masculino')),
-                      DropdownMenuItem(value: 'Femenino', child: Text('Femenino')),
+                      DropdownMenuItem(
+                        value: 'Masculino',
+                        child: Text('Masculino'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Femenino',
+                        child: Text('Femenino'),
+                      ),
                       DropdownMenuItem(value: 'Otro', child: Text('Otro')),
-                      DropdownMenuItem(value: 'Prefiero no decir', child: Text('Prefiero no decir')),
+                      DropdownMenuItem(
+                        value: 'Prefiero no decir',
+                        child: Text('Prefiero no decir'),
+                      ),
                     ],
                     onChanged: isLoading
                         ? null
