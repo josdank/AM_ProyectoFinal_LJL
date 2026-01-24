@@ -78,10 +78,6 @@ import '../../features/listings/domain/usecases/search_listings.dart';
 import '../../features/listings/domain/usecases/update_listing.dart';
 import '../../features/listings/presentation/bloc/listing_bloc.dart';
 
-// ============================================
-// AGREGAR ESTOS IMPORTS AL ARCHIVO EXISTENTE
-// ============================================
-
 // CHAT FEATURE
 import '../../features/chat/data/datasources/chat_datasource.dart';
 import '../../features/chat/data/repositories/chat_repository_impl.dart';
@@ -92,6 +88,17 @@ import '../../features/chat/domain/usecases/send_message.dart';
 import '../../features/chat/domain/usecases/listen_to_messages.dart';
 import '../../features/chat/domain/usecases/mark_as_read.dart';
 import '../../features/chat/presentation/bloc/chat_bloc.dart';
+
+// VISITS FEATURE
+import '../../features/visits/data/datasources/visit_datasource.dart';
+import '../../features/visits/data/repositories/visit_repository_impl.dart';
+import '../../features/visits/domain/repositories/visit_repository.dart';
+import '../../features/visits/domain/usecases/get_visits.dart';
+import '../../features/visits/domain/usecases/schedule_visit.dart';
+import '../../features/visits/domain/usecases/confirm_visit.dart';
+import '../../features/visits/domain/usecases/cancel_visit.dart';
+import '../../features/visits/domain/usecases/complete_visit.dart';
+import '../../features/visits/presentation/bloc/visit_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -304,4 +311,29 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ChatDatasource>(
     () => ChatDatasourceImpl(client: sl()),
   );
+
+  sl.registerFactory(
+    () => VisitBloc(
+      getVisits: sl(),
+      scheduleVisit: sl(),
+      confirmVisit: sl(),
+      cancelVisit: sl(),
+      completeVisit: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton(() => GetVisits(sl()));
+  sl.registerLazySingleton(() => ScheduleVisit(sl()));
+  sl.registerLazySingleton(() => ConfirmVisit(sl()));
+  sl.registerLazySingleton(() => CancelVisit(sl()));
+  sl.registerLazySingleton(() => CompleteVisit(sl()));
+
+  sl.registerLazySingleton<VisitRepository>(
+    () => VisitRepositoryImpl(datasource: sl()),
+  );
+
+  sl.registerLazySingleton<VisitDatasource>(
+    () => VisitDatasourceImpl(client: sl()),
+  );
+
 }

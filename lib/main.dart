@@ -23,6 +23,10 @@ import 'features/connections/presentation/pages/matches_page.dart';
 import 'features/security/presentation/bloc/security_bloc.dart';
 import 'features/security/presentation/pages/security_page.dart';
 
+// ✅ NUEVOS IMPORTS - CHAT Y VISITS
+import 'features/chat/presentation/pages/chat_list_page.dart';
+import 'features/visits/presentation/pages/my_visits_page.dart';
+
 import 'features/notifications/presentation/bloc/notification_bloc.dart';
 import 'features/notifications/presentation/pages/notifications_page.dart';
 
@@ -184,12 +188,28 @@ class _HomePageContent extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Busca Compañero'),
         actions: [
+          // ✅ NUEVO - Botón de Chat
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline),
+            tooltip: 'Mensajes',
+            onPressed: () => _navigateToChat(context),
+          ),
+          // ✅ NUEVO - Botón de Visitas
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            tooltip: 'Mis Visitas',
+            onPressed: () => _navigateToVisits(context),
+          ),
+          // Perfil (existente)
           IconButton(
             icon: const Icon(Icons.person),
+            tooltip: 'Perfil',
             onPressed: () => _navigateToProfile(context),
           ),
+          // Logout (existente)
           IconButton(
             icon: const Icon(Icons.logout),
+            tooltip: 'Cerrar Sesión',
             onPressed: () => _showLogoutDialog(context),
           ),
         ],
@@ -237,6 +257,9 @@ class _HomePageContent extends StatelessWidget {
               onMatches: () => _navigateToMatches(context),
               onSecurity: () => _navigateToSecurity(context),
               onNotifications: () => _navigateToNotifications(context),
+              // ✅ NUEVAS CALLBACKS - Agregar si HomeDashboardPage las necesita
+              // onChat: () => _navigateToChat(context),
+              // onVisits: () => _navigateToVisits(context),
             );
           }
 
@@ -283,6 +306,26 @@ class _HomePageContent extends StatelessWidget {
 
   void _navigateToNotifications(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsPage()));
+  }
+
+  // ✅ NUEVO - Navegación a Chat
+  void _navigateToChat(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ChatListPage(),
+      ),
+    );
+  }
+
+  // ✅ NUEVO - Navegación a Visitas
+  void _navigateToVisits(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MyVisitsPage(),
+      ),
+    );
   }
 
   void _showLogoutDialog(BuildContext context) {

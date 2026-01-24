@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/listing.dart';
 import '../widgets/listing_images_carousel_widget.dart';
+import '../../../visits/presentation/pages/schedule_visit_page.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class ListingDetailPage extends StatelessWidget {
   final Listing listing;
@@ -160,24 +163,68 @@ class ListingDetailPage extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ElevatedButton(
-            onPressed: () {
-              // TODO: Implementar solicitud de interés
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Funcionalidad próximamente'),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+      // ✅ NUEVA IMPLEMENTACIÓN DEL BOTTOM NAVIGATION BAR
+      bottomNavigationBar: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState) {
+          if (authState is! AuthAuthenticated) {
+            return const SizedBox.shrink();
+          }
+          
+          // No mostrar botón si es mi propia propiedad
+          if (listing.ownerId == authState.user.id) {
+            return const SizedBox.shrink();
+          }
+          
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Botón de Agendar Visita
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ScheduleVisitPage(
+                              listing: listing,
+                              visitorId: authState.user.id,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.calendar_today),
+                      label: const Text('Agendar Visita'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // Botón de Contactar
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Chat próximamente'),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.chat),
+                      label: const Text('Contactar'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: const Text('Contactar'),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
