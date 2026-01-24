@@ -257,9 +257,6 @@ class _HomePageContent extends StatelessWidget {
               onMatches: () => _navigateToMatches(context),
               onSecurity: () => _navigateToSecurity(context),
               onNotifications: () => _navigateToNotifications(context),
-              // ✅ NUEVAS CALLBACKS - Agregar si HomeDashboardPage las necesita
-              // onChat: () => _navigateToChat(context),
-              // onVisits: () => _navigateToVisits(context),
             );
           }
 
@@ -297,7 +294,7 @@ class _HomePageContent extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
-          value: context.read<ConnectionBloc>(),   // Pasa el mismo ConnectionBloc ya creado
+          value: context.read<ConnectionBloc>(),
           child: const ConnectionsPage(),
         ),
       ),
@@ -305,40 +302,40 @@ class _HomePageContent extends StatelessWidget {
   }
 
   void _navigateToMatches(BuildContext context) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => BlocProvider.value(
-        value: context.read<ConnectionBloc>(),   // Reusa el Bloc existente
-        child: const MatchesPage(),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: context.read<ConnectionBloc>(),
+          child: const MatchesPage(),
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-void _navigateToSecurity(BuildContext context) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => BlocProvider.value(
-        value: context.read<SecurityBloc>(), // Usa el mismo bloc del árbol
-        child: const SecurityPage(),
+  void _navigateToSecurity(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: context.read<SecurityBloc>(),
+          child: const SecurityPage(),
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-void _navigateToNotifications(BuildContext context) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => BlocProvider.value(
-        value: context.read<NotificationBloc>(),
-        child: const NotificationsPage(),
+  void _navigateToNotifications(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: context.read<NotificationBloc>(),
+          child: const NotificationsPage(),
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   // ✅ NUEVO - Navegación a Chat
   void _navigateToChat(BuildContext context) {

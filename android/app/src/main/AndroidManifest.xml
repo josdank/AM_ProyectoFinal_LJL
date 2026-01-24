@@ -2,7 +2,8 @@
     <application
         android:label="am_proyectofinal_ljl"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true">  <!-- Agrega esta línea -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
