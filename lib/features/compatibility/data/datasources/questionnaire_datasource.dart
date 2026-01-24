@@ -40,22 +40,22 @@ class QuestionnaireDatasourceImpl implements QuestionnaireDatasource {
     try {
       final data = habits.toJson();
       
-      // ✅ Asegurar que user_id esté presente
+      // Asegurar que user_id esté presente
       data['user_id'] = habits.userId;
       
-      // ✅ NO incluir timestamps - Supabase los maneja automáticamente
+      // NO incluir timestamps - Supabase los maneja automáticamente
       data.remove('created_at');
       data.remove('updated_at');
       
-      // ✅ NO incluir id - Supabase lo genera
+      // NO incluir id - Supabase lo genera
       data.remove('id');
 
-      // ✅ Upsert: inserta si no existe, actualiza si existe (basado en user_id UNIQUE)
+      // Upsert: inserta si no existe, actualiza si existe (basado en user_id UNIQUE)
       final response = await client
           .from('habits')
           .upsert(
             data,
-            onConflict: 'user_id',  // ✅ Clave UNIQUE
+            onConflict: 'user_id',  // Clave UNIQUE
           )
           .select()
           .single();

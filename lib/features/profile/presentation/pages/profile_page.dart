@@ -22,7 +22,7 @@ class ProfilePage extends StatelessWidget {
           return const Scaffold(body: Center(child: Text('No autenticado')));
         }
 
-        // ✅ CORRECCIÓN: NO crear un nuevo BlocProvider aquí
+        // CORRECCIÓN: NO crear un nuevo BlocProvider aquí
         // El ProfileBloc ya existe en el contexto superior (HomePage)
         return Scaffold(
           appBar: AppBar(
@@ -101,16 +101,14 @@ class ProfilePage extends StatelessWidget {
                   onPressed: () async {
                     final result = await Navigator.of(context).push<Habits>(
                       MaterialPageRoute(
-                        builder: (_) => BlocProvider(
-                          create: (_) => sl<CompatibilityBloc>(),
+                        builder: (_) => BlocProvider.value(
+                          value: sl<CompatibilityBloc>(),
                           child: QuestionnairePage(userId: state.profile.id),
                         ),
                       ),
                     );
                     if (result != null && context.mounted) {
-                      // Guardar el cuestionario
-                      final compatibilityBloc = sl<CompatibilityBloc>();
-                      compatibilityBloc.add(
+                      sl<CompatibilityBloc>().add(
                         SaveHabitsRequested(habits: result),
                       );
 

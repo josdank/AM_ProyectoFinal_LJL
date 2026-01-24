@@ -2,15 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
-import 'core/di/injection_container.dart' as di;
+
 import 'core/config/supabase_config.dart';
+import 'core/di/injection_container.dart' as di;
+import 'core/theme/ljl_theme.dart';
+
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/login_page.dart';
+
 import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
+
 import 'features/listings/presentation/bloc/listing_bloc.dart';
 import 'features/listings/presentation/pages/listings_page.dart';
-import 'features/compatibility/presentation/bloc/compatibility_bloc.dart';
+
+import 'features/connections/presentation/bloc/connection_bloc.dart';
+import 'features/connections/presentation/pages/connections_page.dart';
+import 'features/connections/presentation/pages/matches_page.dart';
+
+import 'features/security/presentation/bloc/security_bloc.dart';
+import 'features/security/presentation/pages/security_page.dart';
+
+import 'features/notifications/presentation/bloc/notification_bloc.dart';
+import 'features/notifications/presentation/pages/notifications_page.dart';
+
+import 'features/home/presentation/pages/home_dashboard_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,21 +34,17 @@ void main() async {
   bool envLoaded = false;
   bool supabaseInitialized = false;
 
-  // 1. Cargar variables de entorno
+  // 1) Cargar .env
   try {
     await dotenv.load(fileName: '.env');
     envLoaded = true;
-    print('✅ Variables de entorno cargadas');
-
-    // Validar configuración
     SupabaseConfig.validate();
-    print('✅ Configuración validada');
   } catch (e) {
-    print('⚠️ Error cargando .env o validando configuración: $e');
-    print('📝 Crea un archivo .env con SUPABASE_URL y SUPABASE_ANON_KEY');
+    // Si falla, igual inicia para mostrar mensaje en pantalla
+    envLoaded = false;
   }
 
-  // 2. Inicializar Supabase
+  // 2) Inicializar Supabase
   if (envLoaded) {
     try {
       await Supabase.initialize(
@@ -40,35 +52,15 @@ void main() async {
         anonKey: SupabaseConfig.supabaseAnonKey,
       );
       supabaseInitialized = true;
-      print('✅ Supabase inicializado');
-
-      // Test de conexión
-      try {
-        final response = await Supabase.instance.client
-            .from('profiles')
-            .select()
-            .count(CountOption.exact);
-
-        print('✅ Conexión exitosa - Perfiles en DB: ${response.count}');
-      } catch (e) {
-        print('⚠️ No se pudo verificar la conexión a la tabla profiles: $e');
-        print('   (Esto es normal si la tabla aún no existe)');
-      }
     } catch (e) {
-      print('❌ Error inicializando Supabase: $e');
+      supabaseInitialized = false;
     }
   }
 
-  // 3. Inicializar dependencias
+  // 3) DI
   await di.initDependencies();
-  print('✅ Dependencias inicializadas');
 
-  runApp(
-    MyApp(
-      envLoaded: envLoaded,
-      supabaseInitialized: supabaseInitialized,
-    ),
-  );
+  runApp(MyApp(envLoaded: envLoaded, supabaseInitialized: supabaseInitialized));
 }
 
 class MyApp extends StatelessWidget {
@@ -84,14 +76,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!envLoaded || !supabaseInitialized) {
-      return const MaterialApp(
-        home: Scaffold(
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildLjlTheme(),
+        home: const Scaffold(
           body: Center(
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Text(
                 'Error de configuración.\n\nRevisa tu archivo .env y la conexión a Supabase.',
-                style: TextStyle(color: Colors.red, fontSize: 16),
+                style: TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.w800),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -100,136 +94,89 @@ class MyApp extends StatelessWidget {
       );
     }
 
-    return BlocProvider(
-      create: (_) => di.sl<AuthBloc>()..add(const AuthCheckRequested()),
-      child: MaterialApp(
-        title: 'Busca Compañero',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF667EEA),
-            brightness: Brightness.light,
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32,
-                vertical: 16,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
+    return MultiBlocProvider(
+      providers: [
+        // Auth
+        BlocProvider<AuthBloc>(
+          create: (_) => di.sl<AuthBloc>(),
         ),
-        home: const AuthWrapper(),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildLjlTheme(),
+        home: const RootGate(),
       ),
     );
   }
 }
 
-/// Maneja navegación según autenticación
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
+/// Decide si mostrar Login o Home dependiendo del AuthState.
+/// NO rompe tu flujo: solo organiza.
+class RootGate extends StatelessWidget {
+  const RootGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        if (authState is AuthAuthenticated) {
+          return _HomeShell(userId: authState.user.id, email: authState.user.email ?? '');
+        }
+
+        if (authState is AuthLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
           );
         }
-      },
-      builder: (context, state) {
-        // Verificando sesión
-        if (state is AuthLoading && state.message == 'Verificando sesión...') {
-          return const SplashScreen();
-        }
 
-        // Autenticado → HomePage
-        if (state is AuthAuthenticated) {
-          return const HomePage();
-        }
-
-        // No autenticado → LoginPage
+        // Por defecto: Login
         return const LoginPage();
       },
     );
   }
 }
 
-/// Splash inicial
-class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
+/// Contenedor del Home con TODOS los blocs que dependen de auth.
+/// Así no te falla "context.read<AuthBloc>()" antes de tiempo.
+class _HomeShell extends StatelessWidget {
+  final String userId;
+  final String email;
+
+  const _HomeShell({
+    required this.userId,
+    required this.email,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.home_outlined,
-              size: 100,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Busca Compañero',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(),
-          ],
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ProfileBloc>(
+          create: (_) => di.sl<ProfileBloc>()..add(ProfileLoadRequested(userId: userId)),
         ),
-      ),
+        BlocProvider<ConnectionBloc>(
+          create: (_) => di.sl<ConnectionBloc>()..add(ConnectionLoadRequested(userId: userId)),
+        ),
+        BlocProvider<SecurityBloc>(
+          create: (_) => di.sl<SecurityBloc>()..add(SecurityLoadRequested(userId: userId)),
+        ),
+        BlocProvider<NotificationBloc>(
+          create: (_) => di.sl<NotificationBloc>()..add(NotificationStarted(userId: userId)),
+        ),
+      ],
+      child: _HomePageContent(email: email, userId: userId),
     );
   }
 }
 
-/// HomePage - Pantalla principal después del login
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) {
-        final authState = context.read<AuthBloc>().state;
-        final bloc = di.sl<ProfileBloc>();
-
-        // Cargar perfil automáticamente
-        if (authState is AuthAuthenticated) {
-          bloc.add(ProfileLoadRequested(userId: authState.user.id));
-        }
-
-        return bloc;
-      },
-      child: const _HomePageContent(),
-    );
-  }
-}
-
-/// Contenido de HomePage separado para tener acceso a ProfileBloc
 class _HomePageContent extends StatelessWidget {
-  const _HomePageContent();
+  final String email;
+  final String userId;
+
+  const _HomePageContent({
+    required this.email,
+    required this.userId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -237,193 +184,64 @@ class _HomePageContent extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Busca Compañero'),
         actions: [
-          // Icono de perfil con badge si perfil incompleto
-          BlocBuilder<ProfileBloc, ProfileState>(
-            builder: (context, profileState) {
-              final hasIncompleteProfile = profileState is ProfileLoaded &&
-                  !profileState.profile.isProfileComplete;
-
-              return Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.person),
-                    onPressed: () => _navigateToProfile(context),
-                  ),
-                  if (hasIncompleteProfile)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          color: Colors.orange,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () => _navigateToProfile(context),
           ),
-          // Botón de logout
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => _showLogoutDialog(context),
           ),
         ],
       ),
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, authState) {
-          if (authState is! AuthAuthenticated) {
+      body: BlocBuilder<ProfileBloc, ProfileState>(
+        builder: (context, profileState) {
+          if (profileState is ProfileLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return BlocBuilder<ProfileBloc, ProfileState>(
-            builder: (context, profileState) {
-              // Mientras carga el perfil
-              if (profileState is ProfileLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              // Error al cargar perfil
-              if (profileState is ProfileError) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Colors.red,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        profileState.message,
-                        style: const TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          context.read<ProfileBloc>().add(
-                                ProfileLoadRequested(userId: authState.user.id),
-                              );
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Reintentar'),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              // Perfil cargado correctamente
-              if (profileState is ProfileLoaded) {
-                return _buildWelcomeScreen(
-                  context,
-                  authState.user.email,
-                  profileState.profile.isProfileComplete,
-                );
-              }
-
-              // Estado desconocido
-              return const Center(
-                child: Text('Estado desconocido'),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildWelcomeScreen(
-    BuildContext context,
-    String email,
-    bool isProfileComplete,
-  ) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isProfileComplete
-                  ? Icons.check_circle_outline
-                  : Icons.account_circle_outlined,
-              size: 100,
-              color: isProfileComplete ? Colors.green : Colors.orange,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              '¡Bienvenido!',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              email,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 48),
-
-            // Botón de perfil
-            ElevatedButton.icon(
-              onPressed: () => _navigateToProfile(context),
-              icon: const Icon(Icons.person),
-              label: Text(
-                isProfileComplete ? 'Ver Mi Perfil' : 'Completar Perfil',
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Botón de habitaciones
-            ElevatedButton.icon(
-              onPressed: () => _navigateToListings(context),
-              icon: const Icon(Icons.home_work),
-              label: const Text('Ver Habitaciones'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-              ),
-            ),
-
-            // Mensaje si perfil incompleto
-            if (!isProfileComplete) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
+          if (profileState is ProfileError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                    SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Completa tu perfil para mejorar tu experiencia',
-                        style: TextStyle(color: Colors.orange),
-                        textAlign: TextAlign.center,
-                      ),
+                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const SizedBox(height: 12),
+                    Text(
+                      profileState.message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () => context.read<ProfileBloc>().add(ProfileLoadRequested(userId: userId)),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Reintentar'),
                     ),
                   ],
                 ),
               ),
-            ],
-          ],
-        ),
+            );
+          }
+
+          // Perfil ok
+          if (profileState is ProfileLoaded) {
+            return HomeDashboardPage(
+              email: email,
+              isProfileComplete: profileState.profile.isProfileComplete,
+              onProfile: () => _navigateToProfile(context),
+              onListings: () => _navigateToListings(context),
+              onConnections: () => _navigateToConnections(context),
+              onMatches: () => _navigateToMatches(context),
+              onSecurity: () => _navigateToSecurity(context),
+              onNotifications: () => _navigateToNotifications(context),
+            );
+          }
+
+          return const Center(child: Text('Estado desconocido'));
+        },
       ),
     );
   }
@@ -444,12 +262,27 @@ class _HomePageContent extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (_) => BlocProvider(
-          create: (_) => di.sl<ListingBloc>()
-            ..add(const ListingsLoadRequested()),
+          create: (_) => di.sl<ListingBloc>()..add(const ListingsLoadRequested()),
           child: const ListingsPage(),
         ),
       ),
     );
+  }
+
+  void _navigateToConnections(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const ConnectionsPage()));
+  }
+
+  void _navigateToMatches(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const MatchesPage()));
+  }
+
+  void _navigateToSecurity(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const SecurityPage()));
+  }
+
+  void _navigateToNotifications(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsPage()));
   }
 
   void _showLogoutDialog(BuildContext context) {
