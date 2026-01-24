@@ -8,6 +8,7 @@ abstract class AuthDatasource {
     required String email,
     required String password,
     String? fullName,
+    required String role, // ← agregado aquí
   });
 
   Future<UserModel> signIn({
@@ -33,12 +34,16 @@ class AuthDatasourceImpl implements AuthDatasource {
     required String email,
     required String password,
     String? fullName,
+    required String role, // ← agregado aquí también
   }) async {
     try {
       final response = await _auth.signUp(
         email: email,
         password: password,
-        data: fullName != null ? {'full_name': fullName} : null,
+        data: {
+          if (fullName != null) 'full_name': fullName,
+          'role': role,
+        },
       );
 
       if (response.user == null) {
@@ -109,20 +114,14 @@ class AuthDatasourceImpl implements AuthDatasource {
   }
 
   @override
-  Stream<UserModel?> get authStateChanges {
-    return _auth.onAuthStateChange.map((data) {
-      final user = data.session?.user;
-      return user != null ? UserModel.fromSupabaseUser(user) : null;
-    });
-  }
+  Stream<UserModel?> get authStateChanges =>
+      _auth.onAuthStateChange.map((event) => event.session?.user != null
+          ? UserModel.fromSupabaseUser(event.session!.user)
+          : null);
 
+  /// Método auxiliar para parsear errores de Supabase
   String _parseError(String message) {
-    final errors = {
-      'Invalid login credentials': 'Credenciales inválidas',
-      'Email not confirmed': 'Email no confirmado',
-      'User already registered': 'Email ya registrado',
-      'Email rate limit exceeded': 'Demasiados intentos, intenta más tarde',
-    };
-    return errors[message] ?? message;
+    // Aquí puedes mapear mensajes de Supabase a algo más amigable
+    return message;
   }
 }

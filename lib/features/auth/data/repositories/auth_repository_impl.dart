@@ -15,12 +15,14 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     String? fullName,
+    String role = 'tenant',
   }) async {
     try {
       final user = await datasource.signUp(
         email: email,
         password: password,
         fullName: fullName,
+        role: role,
       );
       return Right(user);
     } on AuthException catch (e) {

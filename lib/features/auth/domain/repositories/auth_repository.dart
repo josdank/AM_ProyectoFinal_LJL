@@ -7,6 +7,7 @@ abstract class AuthRepository {
     required String email,
     required String password,
     String? fullName,
+    String role = 'tenant',
   });
 
   Future<Either<Failure, User>> signIn({

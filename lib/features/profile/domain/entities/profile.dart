@@ -1,8 +1,13 @@
 import 'package:equatable/equatable.dart';
 
+/// Perfil de usuario en la app.
+/// 
+/// Nota: para mantener compatibilidad con datos existentes, [role] tiene
+/// valor por defecto 'tenant' cuando no viene desde la BD.
 class Profile extends Equatable {
   final String id;
   final String fullName;
+  final String role; // tenant | owner | admin (extensible)
   final String? bio;
   final String? photoUrl;
   final DateTime? birthDate;
@@ -17,6 +22,7 @@ class Profile extends Equatable {
   const Profile({
     required this.id,
     required this.fullName,
+    this.role = 'tenant',
     this.bio,
     this.photoUrl,
     this.birthDate,
@@ -40,10 +46,15 @@ class Profile extends Equatable {
     return age;
   }
 
+  bool get isTenant => role == 'tenant';
+  bool get isOwner => role == 'owner';
+  bool get isAdmin => role == 'admin';
+
   @override
   List<Object?> get props => [
         id,
         fullName,
+        role,
         bio,
         photoUrl,
         birthDate,

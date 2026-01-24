@@ -4,6 +4,7 @@ class ProfileModel extends Profile {
   const ProfileModel({
     required super.id,
     required super.fullName,
+    super.role,
     super.bio,
     super.photoUrl,
     super.birthDate,
@@ -19,12 +20,11 @@ class ProfileModel extends Profile {
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
       id: json['id'] as String,
-      fullName: json['full_name'] as String,
+      fullName: (json['full_name'] as String?) ?? '',
+      role: (json['role'] as String?) ?? 'tenant',
       bio: json['bio'] as String?,
       photoUrl: json['photo_url'] as String?,
-      birthDate: json['birth_date'] != null
-          ? DateTime.parse(json['birth_date'])
-          : null,
+      birthDate: json['birth_date'] != null ? DateTime.parse(json['birth_date']) : null,
       gender: json['gender'] as String?,
       occupation: json['occupation'] as String?,
       university: json['university'] as String?,
@@ -39,6 +39,7 @@ class ProfileModel extends Profile {
     return {
       'id': id,
       'full_name': fullName,
+      'role': role,
       'bio': bio,
       'photo_url': photoUrl,
       'birth_date': birthDate?.toIso8601String(),
@@ -56,6 +57,7 @@ class ProfileModel extends Profile {
     return Profile(
       id: id,
       fullName: fullName,
+      role: role,
       bio: bio,
       photoUrl: photoUrl,
       birthDate: birthDate,
