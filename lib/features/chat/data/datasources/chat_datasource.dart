@@ -39,19 +39,19 @@ class ChatDatasourceImpl implements ChatDatasource {
   Future<List<ChatRoomModel>> getChatRooms(String userId) async {
     try {
       final response = await client
-          .from('chat_rooms')
-          .select('''
-            *,
-            connections!inner(
-              requester_id,
-              receiver_id,
-              status
-            )
-          ''')
-          .or('requester_id.eq.$userId,receiver_id.eq.$userId', 
-              referencedTable: 'connections')
-          .eq('connections.status', 'accepted')
-          .order('last_message_at', ascending: false);
+        .from('chat_rooms')
+        .select('''
+          *,
+          connections!inner(
+            from_user,
+            to_user,
+            status
+          )
+        ''')
+        .or('from_user.eq.$userId,to_user.eq.$userId', 
+            referencedTable: 'connections')
+        .eq('connections.status', 'accepted')
+        .order('last_message_at', ascending: false);
 
       return (response as List)
           .map((json) => ChatRoomModel.fromJson(json))
