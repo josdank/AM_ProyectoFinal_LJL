@@ -5,6 +5,8 @@ import 'package:uuid/uuid.dart';
 import '../../domain/entities/listing.dart';
 import '../bloc/listing_bloc.dart';
 import '../widgets/amenities_selector_widget.dart';
+import '../../../geolocation/domain/entities/location_point.dart';
+import '../../../geolocation/presentation/pages/location_picker_page.dart';
 
 class CreateListingPage extends StatefulWidget {
   final String userId;
@@ -46,6 +48,31 @@ class _CreateListingPageState extends State<CreateListingPage> {
   List<String> _selectedAmenities = [];
   List<XFile> _selectedImages = [];
 
+  // NUEVO: Para guardar coordenadas
+  double? _latitude;
+  double? _longitude;
+
+  // NUEVO: Método para abrir el selector de ubicación
+  Future<void> _selectLocation() async {
+    final result = await Navigator.push<LocationPoint>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LocationPickerPage(
+          initialLocation: _latitude != null && _longitude != null
+              ? LocationPoint(latitude: _latitude!, longitude: _longitude!)
+              : null,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _latitude = result.latitude;
+        _longitude = result.longitude;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -74,6 +101,10 @@ class _CreateListingPageState extends State<CreateListingPage> {
     _smokingAllowed = listing.smokingAllowed;
     _guestsAllowed = listing.guestsAllowed;
     _selectedAmenities = List.from(listing.amenities);
+
+    // NUEVO
+    _latitude = listing.latitude;
+    _longitude = listing.longitude;
   }
 
   @override
@@ -117,6 +148,7 @@ class _CreateListingPageState extends State<CreateListingPage> {
     }
   }
 
+  // ACTUALIZADO: guarda coordenadas
   void _saveListing() {
     if (_formKey.currentState!.validate()) {
       final listing = Listing(
@@ -128,6 +160,8 @@ class _CreateListingPageState extends State<CreateListingPage> {
         address: _addressController.text.trim(),
         city: _cityController.text.trim(),
         state: _stateController.text.trim(),
+        latitude: _latitude,   // NUEVO
+        longitude: _longitude, // NUEVO
         roomType: _roomType,
         leaseDuration: _leaseDuration,
         bathroomsCount: _bathroomsCount,
@@ -193,27 +227,16 @@ class _CreateListingPageState extends State<CreateListingPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Imágenes
                   _buildImageSection(),
                   const SizedBox(height: 24),
-
-                  // Información básica
                   _buildBasicInfoSection(),
                   const SizedBox(height: 24),
-
-                  // Ubicación
                   _buildLocationSection(),
                   const SizedBox(height: 24),
-
-                  // Detalles
                   _buildDetailsSection(),
                   const SizedBox(height: 24),
-
-                  // Servicios incluidos
                   _buildServicesSection(),
                   const SizedBox(height: 24),
-
-                  // Amenidades
                   AmenitiesSelectorWidget(
                     selectedAmenities: _selectedAmenities,
                     onChanged: (amenities) {
@@ -221,11 +244,8 @@ class _CreateListingPageState extends State<CreateListingPage> {
                     },
                   ),
                   const SizedBox(height: 24),
-
-                  // Reglas
                   _buildRulesSection(),
                   const SizedBox(height: 24),
-
                   if (isLoading)
                     const Center(child: CircularProgressIndicator())
                   else
@@ -379,6 +399,27 @@ class _CreateListingPageState extends State<CreateListingPage> {
               validator: (value) =>
                   value?.isEmpty ?? true ? 'Campo requerido' : null,
             ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _selectLocation,
+              icon: const Icon(Icons.map),
+              label: Text(
+                _latitude != null && _longitude != null
+                    ? 'Ubicación seleccionada: ${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}'
+                    : 'Seleccionar ubicación en el mapa',
+              ),
+            ),
+            if (_latitude != null && _longitude != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  '📍 Coordenadas: (${_latitude!.toStringAsFixed(6)}, ${_longitude!.toStringAsFixed(6)})',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
           ],
         ),
       ),

@@ -10,6 +10,7 @@ import 'core/theme/ljl_theme.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 
+import 'features/geolocation/presentation/pages/map_view_page.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
 
@@ -37,17 +38,14 @@ void main() async {
   bool envLoaded = false;
   bool supabaseInitialized = false;
 
-  // 1) Cargar .env
   try {
     await dotenv.load(fileName: '.env');
     envLoaded = true;
     SupabaseConfig.validate();
   } catch (e) {
-    // Si falla, igual inicia para mostrar mensaje en pantalla
     envLoaded = false;
   }
 
-  // 2) Inicializar Supabase
   if (envLoaded) {
     try {
       await Supabase.initialize(
@@ -60,7 +58,6 @@ void main() async {
     }
   }
 
-  // 3) DI
   await di.initDependencies();
 
   runApp(MyApp(envLoaded: envLoaded, supabaseInitialized: supabaseInitialized));
@@ -88,7 +85,11 @@ class MyApp extends StatelessWidget {
               padding: EdgeInsets.all(24),
               child: Text(
                 'Error de configuración.\n\nRevisa tu archivo .env y la conexión a Supabase.',
-                style: TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -99,7 +100,6 @@ class MyApp extends StatelessWidget {
 
     return MultiBlocProvider(
       providers: [
-        // Auth
         BlocProvider<AuthBloc>(
           create: (_) => di.sl<AuthBloc>(),
         ),
@@ -121,7 +121,10 @@ class RootGate extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
         if (authState is AuthAuthenticated) {
-          return _HomeShell(userId: authState.user.id, email: authState.user.email ?? '');
+          return _HomeShell(
+            userId: authState.user.id,
+            email: authState.user.email ?? '',
+          );
         }
 
         if (authState is AuthLoading) {
@@ -130,14 +133,12 @@ class RootGate extends StatelessWidget {
           );
         }
 
-        // Por defecto: Login
         return const LoginPage();
       },
     );
   }
 }
 
-/// Contenedor del Home con TODOS los blocs que dependen de auth.
 class _HomeShell extends StatelessWidget {
   final String userId;
   final String email;
@@ -152,16 +153,20 @@ class _HomeShell extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ProfileBloc>(
-          create: (_) => di.sl<ProfileBloc>()..add(ProfileLoadRequested(userId: userId)),
+          create: (_) =>
+              di.sl<ProfileBloc>()..add(ProfileLoadRequested(userId: userId)),
         ),
         BlocProvider<ConnectionBloc>(
-          create: (_) => di.sl<ConnectionBloc>()..add(ConnectionLoadRequested(userId: userId)),
+          create: (_) => di.sl<ConnectionBloc>()
+            ..add(ConnectionLoadRequested(userId: userId)),
         ),
         BlocProvider<SecurityBloc>(
-          create: (_) => di.sl<SecurityBloc>()..add(SecurityLoadRequested(userId: userId)),
+          create: (_) =>
+              di.sl<SecurityBloc>()..add(SecurityLoadRequested(userId: userId)),
         ),
         BlocProvider<NotificationBloc>(
-          create: (_) => di.sl<NotificationBloc>()..add(NotificationStarted(userId: userId)),
+          create: (_) => di.sl<NotificationBloc>()
+            ..add(NotificationStarted(userId: userId)),
         ),
       ],
       child: _HomePageContent(email: email, userId: userId),
@@ -184,25 +189,27 @@ class _HomePageContent extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Busca Compañero'),
         actions: [
-          // Botón de Chat
+          // ✅ NUEVO: Botón de Mapa
+          IconButton(
+            icon: const Icon(Icons.map),
+            tooltip: 'Mapa de Viviendas',
+            onPressed: () => _navigateToMap(context),
+          ),
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
             tooltip: 'Mensajes',
             onPressed: () => _navigateToChat(context),
           ),
-          // Botón de Visitas
           IconButton(
             icon: const Icon(Icons.calendar_today),
             tooltip: 'Mis Visitas',
             onPressed: () => _navigateToVisits(context),
           ),
-          // Perfil (existente)
           IconButton(
             icon: const Icon(Icons.person),
             tooltip: 'Perfil',
             onPressed: () => _navigateToProfile(context),
           ),
-          // Logout (existente)
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Cerrar Sesión',
@@ -223,16 +230,20 @@ class _HomePageContent extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const Icon(Icons.error_outline,
+                        size: 64, color: Colors.red),
                     const SizedBox(height: 12),
                     Text(
                       profileState.message,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style:
+                          const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 12),
                     ElevatedButton.icon(
-                      onPressed: () => context.read<ProfileBloc>().add(ProfileLoadRequested(userId: userId)),
+                      onPressed: () => context
+                          .read<ProfileBloc>()
+                          .add(ProfileLoadRequested(userId: userId)),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Reintentar'),
                     ),
@@ -242,7 +253,6 @@ class _HomePageContent extends StatelessWidget {
             );
           }
 
-          // Perfil ok
           if (profileState is ProfileLoaded) {
             return HomeDashboardPage(
               email: email,
@@ -253,11 +263,22 @@ class _HomePageContent extends StatelessWidget {
               onMatches: () => _navigateToMatches(context),
               onSecurity: () => _navigateToSecurity(context),
               onNotifications: () => _navigateToNotifications(context),
+              onMap: () => _navigateToMap(context), // NUEVO
             );
           }
 
           return const Center(child: Text('Estado desconocido'));
         },
+      ),
+    );
+  }
+
+  // ✅ NUEVO MÉTODO
+  void _navigateToMap(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MapViewPage(),
       ),
     );
   }
@@ -278,7 +299,8 @@ class _HomePageContent extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (_) => BlocProvider(
-          create: (_) => di.sl<ListingBloc>()..add(const ListingsLoadRequested()),
+          create: (_) =>
+              di.sl<ListingBloc>()..add(const ListingsLoadRequested()),
           child: const ListingsPage(),
         ),
       ),
@@ -333,7 +355,6 @@ class _HomePageContent extends StatelessWidget {
     );
   }
 
-  // - Navegación a Chat
   void _navigateToChat(BuildContext context) {
     Navigator.push(
       context,
@@ -343,7 +364,6 @@ class _HomePageContent extends StatelessWidget {
     );
   }
 
-  // Navegación a Visitas
   void _navigateToVisits(BuildContext context) {
     Navigator.push(
       context,
@@ -358,18 +378,23 @@ class _HomePageContent extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Cerrar Sesión'),
-        content: const Text('¿Estás seguro que deseas cerrar sesión?'),
+        content:
+            const Text('¿Estás seguro que deseas cerrar sesión?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(),
             child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(dialogContext).pop();
-              context.read<AuthBloc>().add(const AuthLogoutRequested());
+              context
+                  .read<AuthBloc>()
+                  .add(const AuthLogoutRequested());
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style:
+                TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Cerrar Sesión'),
           ),
         ],

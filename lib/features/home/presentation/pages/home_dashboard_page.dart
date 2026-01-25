@@ -11,6 +11,7 @@ class HomeDashboardPage extends StatelessWidget {
   final VoidCallback onMatches;
   final VoidCallback onSecurity;
   final VoidCallback onNotifications;
+  final VoidCallback onMap; // NUEVO
 
   const HomeDashboardPage({
     super.key,
@@ -22,6 +23,7 @@ class HomeDashboardPage extends StatelessWidget {
     required this.onMatches,
     required this.onSecurity,
     required this.onNotifications,
+    required this.onMap, // NUEVO
   });
 
   @override
@@ -34,6 +36,7 @@ class HomeDashboardPage extends StatelessWidget {
           _BrandHero(email: email, isProfileComplete: isProfileComplete),
           const SizedBox(height: 14),
 
+          // NUEVO: Fila de botones principales con Mapa
           Row(
             children: [
               Expanded(
@@ -52,6 +55,20 @@ class HomeDashboardPage extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          // Botón de Mapa a ancho completo
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onMap,
+              icon: const Icon(Icons.map),
+              label: const Text('Ver Mapa de Viviendas'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: LjlColors.teal,
+                foregroundColor: Colors.white,
+              ),
+            ),
           ),
 
           const SizedBox(height: 18),
@@ -190,7 +207,6 @@ class _BrandHero extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // LOGO
                 Container(
                   width: 54,
                   height: 54,
