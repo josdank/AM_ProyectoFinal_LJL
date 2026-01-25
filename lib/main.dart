@@ -80,17 +80,19 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: buildLjlTheme(),
         home: const Scaffold(
-          body: Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text(
-                'Error de configuración.\n\nRevisa tu archivo .env y la conexión a Supabase.',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
+          body: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Error de configuración.\n\nRevisa tu archivo .env y la conexión a Supabase.',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
           ),
@@ -106,9 +108,34 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: buildLjlTheme(),
-        home: const RootGate(),
+        theme: buildLjlTheme().copyWith(
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            elevation: 1,
+            centerTitle: true,
+            toolbarHeight: 60, // Altura consistente para AppBar
+          ),
+        ),
+        home: const SafeAreaWrapper(), // Usar el wrapper con SafeArea
       ),
+    );
+  }
+}
+
+// ✅ NUEVO: Wrapper principal con SafeArea
+class SafeAreaWrapper extends StatelessWidget {
+  const SafeAreaWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: true,
+      bottom: true,
+      left: true,
+      right: true,
+      minimum: const EdgeInsets.only(top: 4), // Margen mínimo superior
+      child: RootGate(),
     );
   }
 }
@@ -188,92 +215,131 @@ class _HomePageContent extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Busca Compañero'),
+        centerTitle: true,
+        toolbarHeight: 60, // Altura fija para mejor manejo táctil
         actions: [
-          // ✅ NUEVO: Botón de Mapa
-          IconButton(
-            icon: const Icon(Icons.map),
+          // Botones con mejor área táctil
+          _buildAppBarIconButton(
+            icon: Icons.map,
             tooltip: 'Mapa de Viviendas',
             onPressed: () => _navigateToMap(context),
           ),
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline),
+          _buildAppBarIconButton(
+            icon: Icons.chat_bubble_outline,
             tooltip: 'Mensajes',
             onPressed: () => _navigateToChat(context),
           ),
-          IconButton(
-            icon: const Icon(Icons.calendar_today),
+          _buildAppBarIconButton(
+            icon: Icons.calendar_today,
             tooltip: 'Mis Visitas',
             onPressed: () => _navigateToVisits(context),
           ),
-          IconButton(
-            icon: const Icon(Icons.person),
+          _buildAppBarIconButton(
+            icon: Icons.person,
             tooltip: 'Perfil',
             onPressed: () => _navigateToProfile(context),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
+          _buildAppBarIconButton(
+            icon: Icons.logout,
             tooltip: 'Cerrar Sesión',
             onPressed: () => _showLogoutDialog(context),
           ),
         ],
       ),
-      body: BlocBuilder<ProfileBloc, ProfileState>(
-        builder: (context, profileState) {
-          if (profileState is ProfileLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: SafeArea(
+        top: false, // Ya estamos dentro de un SafeAreaWrapper
+        bottom: true,
+        left: true,
+        right: true,
+        child: BlocBuilder<ProfileBloc, ProfileState>(
+          builder: (context, profileState) {
+            if (profileState is ProfileLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (profileState is ProfileError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 64, color: Colors.red),
-                    const SizedBox(height: 12),
-                    Text(
-                      profileState.message,
-                      textAlign: TextAlign.center,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () => context
-                          .read<ProfileBloc>()
-                          .add(ProfileLoadRequested(userId: userId)),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Reintentar'),
-                    ),
-                  ],
+            if (profileState is ProfileError) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
+                      const Icon(Icons.error_outline,
+                          size: 64, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          profileState.message,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: () => context
+                            .read<ProfileBloc>()
+                            .add(ProfileLoadRequested(userId: userId)),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reintentar'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }
+              );
+            }
 
-          if (profileState is ProfileLoaded) {
-            return HomeDashboardPage(
-              email: email,
-              isProfileComplete: profileState.profile.isProfileComplete,
-              onProfile: () => _navigateToProfile(context),
-              onListings: () => _navigateToListings(context),
-              onConnections: () => _navigateToConnections(context),
-              onMatches: () => _navigateToMatches(context),
-              onSecurity: () => _navigateToSecurity(context),
-              onNotifications: () => _navigateToNotifications(context),
-              onMap: () => _navigateToMap(context), // NUEVO
-            );
-          }
+            if (profileState is ProfileLoaded) {
+              return HomeDashboardPage(
+                email: email,
+                isProfileComplete: profileState.profile.isProfileComplete,
+                onProfile: () => _navigateToProfile(context),
+                onListings: () => _navigateToListings(context),
+                onConnections: () => _navigateToConnections(context),
+                onMatches: () => _navigateToMatches(context),
+                onSecurity: () => _navigateToSecurity(context),
+                onNotifications: () => _navigateToNotifications(context),
+                onMap: () => _navigateToMap(context),
+              );
+            }
 
-          return const Center(child: Text('Estado desconocido'));
-        },
+            return const Center(child: Text('Estado desconocido'));
+          },
+        ),
       ),
     );
   }
 
-  // ✅ NUEVO MÉTODO
+  // ✅ NUEVO: Método para crear IconButtons con mejor área táctil
+  Widget _buildAppBarIconButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: SizedBox(
+        width: 44, // Ancho mínimo para mejor táctil
+        height: 44, // Alto mínimo para mejor táctil
+        child: IconButton(
+          icon: Icon(icon),
+          tooltip: tooltip,
+          onPressed: onPressed,
+          padding: EdgeInsets.zero, // Padding interno cero, controlado por SizedBox
+          iconSize: 22,
+        ),
+      ),
+    );
+  }
+
   void _navigateToMap(BuildContext context) {
     Navigator.push(
       context,
@@ -376,28 +442,73 @@ class _HomePageContent extends StatelessWidget {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Cerrar Sesión'),
-        content:
-            const Text('¿Estás seguro que deseas cerrar sesión?'),
-        actions: [
-          TextButton(
-            onPressed: () =>
-                Navigator.of(dialogContext).pop(),
-            child: const Text('Cancelar'),
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.logout, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text(
+                'Cerrar Sesión',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '¿Estás seguro que deseas cerrar sesión?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(dialogContext).pop();
+                        context
+                            .read<AuthBloc>()
+                            .add(const AuthLogoutRequested());
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Cerrar Sesión'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              context
-                  .read<AuthBloc>()
-                  .add(const AuthLogoutRequested());
-            },
-            style:
-                TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Cerrar Sesión'),
-          ),
-        ],
+        ),
       ),
     );
   }

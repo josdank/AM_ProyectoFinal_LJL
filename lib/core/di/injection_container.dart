@@ -394,15 +394,13 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<TenantRepository>(
     () => TenantRepositoryImpl(dataSource: sl<TenantDataSource>()),
   );
-
-<<<<<<< HEAD
   sl.registerFactory<TenantCubit>(
     () => TenantCubit(
       repository: sl<TenantRepository>(),
       analyticsService: sl<AnalyticsService>(),
     ),
   );
-=======
+
     // ============================================
   // GEOLOCATION FEATURE
   // ============================================
@@ -424,6 +422,4 @@ Future<void> initDependencies() async {
       searchNearbyPlaces: sl<SearchNearbyPlaces>(),
     ),
   );
-
->>>>>>> 9853d6849e3da3fe36ad702b73919c509ee9664d
 }
