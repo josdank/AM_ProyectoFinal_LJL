@@ -30,6 +30,7 @@
         "latlong2",
         "permission_handler",
         "provider",
+        "sentry_flutter",
         "shared_preferences",
         "shimmer",
         "supabase_flutter",
@@ -1734,6 +1735,31 @@
       "version": "1.0.0",
       "dependencies": [
         "fixnum"
+      ]
+    },
+    {
+      "name": "sentry_flutter",
+      "version": "8.14.2",
+      "dependencies": [
+        "collection",
+        "ffi",
+        "file",
+        "flutter",
+        "flutter_web_plugins",
+        "meta",
+        "package_info_plus",
+        "sentry"
+      ]
+    },
+    {
+      "name": "sentry",
+      "version": "8.14.2",
+      "dependencies": [
+        "collection",
+        "http",
+        "meta",
+        "stack_trace",
+        "uuid"
       ]
     }
   ],

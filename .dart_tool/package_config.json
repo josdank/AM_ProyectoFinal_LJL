@@ -836,6 +836,18 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "sentry",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/sentry-8.14.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
+      "name": "sentry_flutter",
+      "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/sentry_flutter-8.14.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
       "name": "shared_preferences",
       "rootUri": "file:///C:/Users/ignne/AppData/Local/Pub/Cache/hosted/pub.dev/shared_preferences-2.5.4",
       "packageUri": "lib/",

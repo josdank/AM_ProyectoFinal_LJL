@@ -6,7 +6,7 @@ class User extends Equatable {
   final String? fullName;
   final bool emailConfirmed;
   final DateTime? createdAt;
-  final List<String> roles; // AGREGAR
+  final List<String> roles;
 
   const User({
     required this.id,
@@ -14,24 +14,29 @@ class User extends Equatable {
     this.fullName,
     required this.emailConfirmed,
     this.createdAt,
-    this.roles = const ['user'], // VALOR POR DEFECTO
+    this.roles = const ['user'],
   });
 
-  // Helper methods para roles
+  // NUEVO
+  bool get isProfileComplete {
+    return fullName != null && fullName!.isNotEmpty;
+  }
+
   bool isTenant() => roles.contains('tenant');
   bool isLandlord() => roles.contains('landlord');
   bool isAdmin() => roles.contains('admin');
+
   bool hasAnyRole(List<String> checkRoles) {
     return roles.any((role) => checkRoles.contains(role));
   }
 
   @override
   List<Object?> get props => [
-    id, 
-    email, 
-    fullName, 
-    emailConfirmed, 
-    createdAt,
-    roles, // AGREGAR
-  ];
+        id,
+        email,
+        fullName,
+        emailConfirmed,
+        createdAt,
+        roles,
+      ];
 }

@@ -19,7 +19,7 @@ class SentryService {
   static Future<void> captureException(
     dynamic exception, {
     dynamic stackTrace,
-    String? hint,
+    Hint? hint, // CAMBIO AQUÍ
     Map<String, dynamic>? extra,
   }) async {
     await Sentry.captureException(
@@ -28,7 +28,9 @@ class SentryService {
       hint: hint,
       withScope: (scope) {
         if (extra != null) {
-          scope.setExtras(extra);
+          extra.forEach((key, value) {
+            scope.setExtra(key, value); // CAMBIO AQUÍ
+          });
         }
       },
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'ljl_colors.dart';
 
 class ThemeProvider with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
@@ -37,25 +38,30 @@ class ThemeProvider with ChangeNotifier {
   }
 }
 
-// Actualizar ljl_theme.dart para soportar dark mode
 class LjlTheme {
   static ThemeData lightTheme() {
     return ThemeData(
-      primaryColor: ljl_colors.primary,
-      scaffoldBackgroundColor: Colors.white,
       brightness: Brightness.light,
-      // ... tus configuraciones actuales
+      primaryColor: LjlColors.teal,
+      scaffoldBackgroundColor: LjlColors.light,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: LjlColors.teal,
+        foregroundColor: Colors.white,
+      ),
     );
   }
 
   static ThemeData darkTheme() {
     return ThemeData(
-      primaryColor: ljl_colors.primaryDark,
-      scaffoldBackgroundColor: Colors.grey[900],
       brightness: Brightness.dark,
-      cardColor: Colors.grey[800],
-      dialogBackgroundColor: Colors.grey[800],
-      // ... configuraciones para dark mode
+      primaryColor: LjlColors.gold,
+      scaffoldBackgroundColor: LjlColors.dark,
+      cardColor: const Color(0xFF1E2A44),
+      dialogBackgroundColor: const Color(0xFF1E2A44),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: LjlColors.dark,
+        foregroundColor: Colors.white,
+      ),
     );
   }
 }

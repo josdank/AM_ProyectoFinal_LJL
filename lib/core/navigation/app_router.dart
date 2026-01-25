@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../features/auth/presentation/pages/login_page.dart';
-import '../features/auth/presentation/pages/register_page.dart';
-import '../features/home/presentation/pages/home_dashboard_page.dart';
-import '../features/tenant/presentation/pages/tenant_home_page.dart';
-import '../features/listings/presentation/pages/listings_page.dart';
-import '../features/profile/presentation/pages/profile_page.dart';
+import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/home/presentation/pages/home_dashboard_page.dart';
+import '../../features/tenant/presentation/pages/tenant_home_page.dart';
+import '../../features/listings/presentation/pages/listings_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:flutter/material.dart';
 
 class AppRouter {
   static GoRouter get router => _router;
@@ -17,18 +17,19 @@ class AppRouter {
     redirect: (context, state) {
       final authBloc = context.read<AuthBloc>();
       final isAuthenticated = authBloc.state is AuthAuthenticated;
-      
+      final location = state.uri.toString(); // AQUI ESTA EL CAMBIO 
+
       if (!isAuthenticated) {
         // Redirigir a login si no está autenticado
-        if (state.location != '/login' && state.location != '/register') {
+        if (location != '/login' && location != '/register') {
           return '/login';
         }
       } else {
         // Si está autenticado, redirigir según rol
         final authState = authBloc.state as AuthAuthenticated;
         final user = authState.user;
-        
-        if (state.location == '/login' || state.location == '/register') {
+
+        if (location == '/login' || location == '/register') {
           return user.isTenant() ? '/tenant' : '/home';
         }
       }
@@ -48,9 +49,36 @@ class AppRouter {
         builder: (context, state) => const RegisterPage(),
       ),
       GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeDashboardPage(),
+  path: '/home',
+  builder: (context, state) {
+    final authState = context.read<AuthBloc>().state as AuthAuthenticated;
+    final user = authState.user;
+
+    return HomeDashboardPage(
+            email: user.email,
+            isProfileComplete: user.isProfileComplete,
+            onProfile: () => context.go('/profile'),
+            onListings: () => context.go('/listings'),
+            onConnections: () {
+              // luego puedes poner ruta real
+              debugPrint('Connections');
+            },
+            onMatches: () {
+              debugPrint('Matches');
+            },
+            onSecurity: () {
+              context.go('/security'); // si tienes esta ruta
+            },
+            onNotifications: () {
+              debugPrint('Notifications');
+            },
+            onMap: () {
+              context.go('/map'); // si tienes mapa
+            },
+          );
+        },
       ),
+
       GoRoute(
         path: '/tenant',
         builder: (context, state) => const TenantHomePage(),
