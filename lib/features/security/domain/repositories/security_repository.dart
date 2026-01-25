@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
-import '../entities/reference.dart'; // ✅ Importa la ENTIDAD, no el modelo
+import '../entities/reference.dart'; 
 import '../entities/user_block.dart';
 import '../entities/user_report.dart';
 import '../entities/verification.dart';

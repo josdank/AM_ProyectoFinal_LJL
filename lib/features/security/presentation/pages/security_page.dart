@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/security_bloc.dart';
+import 'references_page.dart';
 
 class SecurityPage extends StatefulWidget {
   const SecurityPage({super.key});
@@ -46,6 +47,43 @@ class _SecurityPageState extends State<SecurityPage> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // ===== SECCIÓN DE REFERENCIAS (NUEVO) =====
+              _Section(
+                title: 'Referencias de Convivencia',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Referencias verificadas: ${state.verifiedCount} de ${state.totalReferences}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Las referencias ayudan a otros usuarios a conocerte mejor y aumentan tu credibilidad.',
+                      style: TextStyle(fontSize: 13, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BlocProvider.value(
+                              value: context.read<SecurityBloc>(),
+                              child: const ReferencesPage(),
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.people),
+                      label: const Text('Gestionar Referencias'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // ===== VERIFICACIÓN DE IDENTIDAD =====
               _Section(
                 title: 'Verificación de identidad',
                 child: Column(
@@ -74,17 +112,19 @@ class _SecurityPageState extends State<SecurityPage> {
                                 SecuritySubmitVerificationRequested(userId: userId, type: _verificationType),
                               ),
                       icon: const Icon(Icons.verified_user),
-                      label: const Text('Enviar verificación (Pendiente)'),
+                      label: const Text('Enviar verificación'),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Nota: La aprobación depende del administrador. (Para el proyecto, queda en "pending").',
+                      'Nota: La aprobación depende del administrador.',
                       style: TextStyle(color: Colors.black54, fontSize: 12),
                     )
                   ],
                 ),
               ),
               const SizedBox(height: 16),
+              
+              // ===== REPORTAR USUARIO =====
               _Section(
                 title: 'Reportar usuario',
                 child: Column(
@@ -129,6 +169,8 @@ class _SecurityPageState extends State<SecurityPage> {
                 ),
               ),
               const SizedBox(height: 16),
+              
+              // ===== BLOQUEAR USUARIO =====
               _Section(
                 title: 'Bloquear usuario',
                 child: Column(

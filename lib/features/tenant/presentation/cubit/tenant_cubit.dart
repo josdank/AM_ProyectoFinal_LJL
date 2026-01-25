@@ -13,30 +13,42 @@ class TenantCubit extends Cubit<TenantState> {
   TenantCubit({
     required this.repository,
     required this.analyticsService,
-  }) : super(TenantInitial());
+  }) : super(const TenantState());
 
   Future<void> loadAll({required String tenantId}) async {
-    emit(TenantLoading());
+    emit(state.copyWith(isLoading: true, error: null));
+    
     try {
       final favoritesResult = await repository.getFavorites(userId: tenantId);
       final applicationsResult = await repository.getApplications(tenantId: tenantId);
       
       favoritesResult.fold(
-        (failure) => emit(TenantError('Error cargando favoritos: ${failure.message}')),
+        (failure) => emit(state.copyWith(
+          isLoading: false,
+          error: 'Error cargando favoritos: ${failure.message}',
+        )),
         (favorites) {
           applicationsResult.fold(
-            (failure) => emit(TenantError('Error cargando aplicaciones: ${failure.message}')),
+            (failure) => emit(state.copyWith(
+              isLoading: false,
+              error: 'Error cargando aplicaciones: ${failure.message}',
+            )),
             (applications) {
-              emit(TenantLoaded(
+              emit(state.copyWith(
+                isLoading: false,
                 favorites: favorites,
                 applications: applications,
+                error: null,
               ));
             },
           );
         },
       );
     } catch (e) {
-      emit(TenantError('Error al cargar datos: $e'));
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Error al cargar datos: $e',
+      ));
     }
   }
 
@@ -51,7 +63,7 @@ class TenantCubit extends Cubit<TenantState> {
       );
       
       isFavResult.fold(
-        (failure) => emit(TenantError(failure.message)),
+        (failure) => emit(state.copyWith(error: failure.message)),
         (isCurrentlyFavorite) async {
           final result = await repository.toggleFavorite(
             userId: tenantId,
@@ -60,7 +72,7 @@ class TenantCubit extends Cubit<TenantState> {
           );
           
           result.fold(
-            (failure) => emit(TenantError(failure.message)),
+            (failure) => emit(state.copyWith(error: failure.message)),
             (_) {
               final eventName = isCurrentlyFavorite ? 'favorite_removed' : 'favorite_added';
               analyticsService.logEvent(eventName, parameters: {
@@ -73,7 +85,7 @@ class TenantCubit extends Cubit<TenantState> {
         },
       );
     } catch (e) {
-      emit(TenantError('Error al actualizar favorito: $e'));
+      emit(state.copyWith(error: 'Error al actualizar favorito: $e'));
     }
   }
 
@@ -82,7 +94,8 @@ class TenantCubit extends Cubit<TenantState> {
     required Listing listing,
     String? message,
   }) async {
-    emit(TenantLoading());
+    emit(state.copyWith(isLoading: true, error: null));
+    
     try {
       final result = await repository.createApplication(
         tenantId: tenantId,
@@ -91,7 +104,7 @@ class TenantCubit extends Cubit<TenantState> {
       );
       
       result.fold(
-        (failure) => emit(TenantError(failure.message)),
+        (failure) => emit(state.copyWith(isLoading: false, error: failure.message)),
         (application) {
           analyticsService.logEvent('application_created', parameters: {
             'application_id': application.id,
@@ -103,25 +116,24 @@ class TenantCubit extends Cubit<TenantState> {
         },
       );
     } catch (e) {
-      emit(TenantError('Error al enviar solicitud: $e'));
+      emit(state.copyWith(isLoading: false, error: 'Error al enviar solicitud: $e'));
     }
   }
 
-  Future<void> cancelApplication(String applicationId) async {
-    emit(TenantLoading());
+  Future<void> cancelApplication({
+    required String tenantId,
+    required String applicationId,
+  }) async {
+    emit(state.copyWith(isLoading: true, error: null));
+    
     try {
       final result = await repository.cancelApplication(applicationId: applicationId);
       result.fold(
-        (failure) => emit(TenantError(failure.message)),
-        (_) {
-          final userId = Supabase.instance.client.auth.currentUser?.id;
-          if (userId != null) {
-            _reloadData(userId);
-          }
-        },
+        (failure) => emit(state.copyWith(isLoading: false, error: failure.message)),
+        (_) => _reloadData(tenantId),
       );
     } catch (e) {
-      emit(TenantError('Error al cancelar solicitud: $e'));
+      emit(state.copyWith(isLoading: false, error: 'Error al cancelar solicitud: $e'));
     }
   }
 
@@ -134,26 +146,35 @@ class TenantCubit extends Cubit<TenantState> {
   }
 }
 
-abstract class TenantState {
-  const TenantState();
-}
-
-class TenantInitial extends TenantState {}
-
-class TenantLoading extends TenantState {}
-
-class TenantLoaded extends TenantState {
+// ===== ESTADO =====
+class TenantState {
+  final bool isLoading;
+  final String? error;
   final List<Favorite> favorites;
   final List<Application> applications;
 
-  const TenantLoaded({
-    required this.favorites,
-    required this.applications,
+  const TenantState({
+    this.isLoading = false,
+    this.error,
+    this.favorites = const [],
+    this.applications = const [],
   });
-}
 
-class TenantError extends TenantState {
-  final String message;
+  // Getters de conveniencia
+  bool get loading => isLoading;
+  bool get hasError => error != null;
 
-  const TenantError(this.message);
+  TenantState copyWith({
+    bool? isLoading,
+    String? error,
+    List<Favorite>? favorites,
+    List<Application>? applications,
+  }) {
+    return TenantState(
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      favorites: favorites ?? this.favorites,
+      applications: applications ?? this.applications,
+    );
+  }
 }

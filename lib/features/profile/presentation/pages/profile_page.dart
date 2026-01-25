@@ -5,6 +5,9 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../compatibility/domain/entities/habits.dart';
 import '../../../compatibility/presentation/bloc/compatibility_bloc.dart';
 import '../../../compatibility/presentation/pages/questionnaire_page.dart';
+import '../../../security/presentation/bloc/security_bloc.dart';
+import '../../../security/presentation/widgets/verification_badge_widget.dart';
+import '../../../security/presentation/widgets/report_form_widget.dart';
 import '../../domain/entities/profile.dart';
 import '../bloc/profile_bloc.dart';
 import 'edit_profile_page.dart';
@@ -88,7 +91,10 @@ class ProfilePage extends StatelessWidget {
               }
 
               if (state is ProfileLoaded) {
-                return _ProfileContent(profile: state.profile);
+                return _ProfileContent(
+                  profile: state.profile,
+                  currentUserId: authState.user.id,
+                );
               }
 
               return const Center(child: Text('Estado desconocido'));
@@ -156,8 +162,12 @@ class ProfilePage extends StatelessWidget {
 
 class _ProfileContent extends StatelessWidget {
   final Profile profile;
+  final String currentUserId;
 
-  const _ProfileContent({required this.profile});
+  const _ProfileContent({
+    required this.profile,
+    required this.currentUserId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -178,6 +188,22 @@ class _ProfileContent extends StatelessWidget {
               );
             },
           ),
+          
+          // Badge de verificación
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: BlocBuilder<SecurityBloc, SecurityState>(
+              builder: (context, state) {
+                return VerificationBadgeWidget(
+                  verification: state.verification,
+                  verifiedReferencesCount: state.verifiedCount,
+                  showLabel: true,
+                  size: 20,
+                );
+              },
+            ),
+          ),
+          
           ProfileInfoCardWidget(profile: profile),
         ],
       ),
