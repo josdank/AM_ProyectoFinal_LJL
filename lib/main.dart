@@ -23,7 +23,6 @@ import 'features/connections/presentation/pages/matches_page.dart';
 import 'features/security/presentation/bloc/security_bloc.dart';
 import 'features/security/presentation/pages/security_page.dart';
 
-// ✅ NUEVOS IMPORTS - CHAT Y VISITS
 import 'features/chat/presentation/pages/chat_list_page.dart';
 import 'features/visits/presentation/pages/my_visits_page.dart';
 
@@ -114,8 +113,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Decide si mostrar Login o Home dependiendo del AuthState.
-/// NO rompe tu flujo: solo organiza.
 class RootGate extends StatelessWidget {
   const RootGate({super.key});
 
@@ -141,7 +138,6 @@ class RootGate extends StatelessWidget {
 }
 
 /// Contenedor del Home con TODOS los blocs que dependen de auth.
-/// Así no te falla "context.read<AuthBloc>()" antes de tiempo.
 class _HomeShell extends StatelessWidget {
   final String userId;
   final String email;
@@ -188,13 +184,13 @@ class _HomePageContent extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Busca Compañero'),
         actions: [
-          // ✅ NUEVO - Botón de Chat
+          // Botón de Chat
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
             tooltip: 'Mensajes',
             onPressed: () => _navigateToChat(context),
           ),
-          // ✅ NUEVO - Botón de Visitas
+          // Botón de Visitas
           IconButton(
             icon: const Icon(Icons.calendar_today),
             tooltip: 'Mis Visitas',
@@ -337,7 +333,7 @@ class _HomePageContent extends StatelessWidget {
     );
   }
 
-  // ✅ NUEVO - Navegación a Chat
+  // - Navegación a Chat
   void _navigateToChat(BuildContext context) {
     Navigator.push(
       context,
@@ -347,7 +343,7 @@ class _HomePageContent extends StatelessWidget {
     );
   }
 
-  // ✅ NUEVO - Navegación a Visitas
+  // Navegación a Visitas
   void _navigateToVisits(BuildContext context) {
     Navigator.push(
       context,

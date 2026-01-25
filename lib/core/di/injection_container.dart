@@ -100,6 +100,16 @@ import '../../features/visits/domain/usecases/cancel_visit.dart';
 import '../../features/visits/domain/usecases/complete_visit.dart';
 import '../../features/visits/presentation/bloc/visit_bloc.dart';
 
+
+// GEOLOCALIZACIÓN FEATURE 
+import '../../features/geolocation/data/datasources/location_datasource.dart';
+import '../../features/geolocation/data/repositories/geolocation_repository_impl.dart';
+import '../../features/geolocation/domain/repositories/geolocation_repository.dart';
+import '../../features/geolocation/domain/usecases/get_current_location.dart';
+import '../../features/geolocation/domain/usecases/calculate_distance.dart';
+import '../../features/geolocation/domain/usecases/search_nearby_places.dart';
+import '../../features/geolocation/presentation/bloc/map_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -334,6 +344,28 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<VisitDatasource>(
     () => VisitDatasourceImpl(client: sl()),
+  );
+
+    // ============================================
+  // GEOLOCATION FEATURE
+  // ============================================
+  sl.registerLazySingleton<LocationDatasource>(
+    () => LocationDatasourceImpl(client: sl<SupabaseClient>()),
+  );
+
+  sl.registerLazySingleton<GeolocationRepository>(
+    () => GeolocationRepositoryImpl(datasource: sl<LocationDatasource>()),
+  );
+
+  sl.registerLazySingleton(() => GetCurrentLocation(sl<GeolocationRepository>()));
+  sl.registerLazySingleton(() => CalculateDistance(sl<GeolocationRepository>()));
+  sl.registerLazySingleton(() => SearchNearbyPlaces(sl<GeolocationRepository>()));
+
+  sl.registerFactory(
+    () => MapBloc(
+      getCurrentLocation: sl<GetCurrentLocation>(),
+      searchNearbyPlaces: sl<SearchNearbyPlaces>(),
+    ),
   );
 
 }

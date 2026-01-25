@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/utils/validators.dart';
-import '../bloc/auth_bloc.dart';
-import '../widgets/auth_text_field.dart';
-import '../widgets/auth_button.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/widgets/auth_text_field.dart';
+import '../../../auth/presentation/widgets/auth_button.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
