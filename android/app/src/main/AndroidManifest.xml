@@ -1,15 +1,67 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- ✅ PERMISOS DE UBICACIÓN - AGREGADOS -->
+    <!-- ============================================ -->
+    <!-- PERMISOS DE INTERNET Y RED -->
+    <!-- ============================================ -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    
+    <!-- ============================================ -->
+    <!-- PERMISOS DE GEOLOCALIZACIÓN -->
+    <!-- ============================================ -->
+    <!-- Ubicación precisa (necesaria para el mapa y búsqueda de viviendas cercanas) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!-- Ubicación aproximada (fallback) -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Ubicación en segundo plano (si necesitas tracking continuo) -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     
+    <!-- ============================================ -->
+    <!-- PERMISOS DE ALMACENAMIENTO -->
+    <!-- ============================================ -->
+    <!-- Para Android 12 y anteriores -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    
+    <!-- Para Android 13+ (Granular Media Permissions) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    
+    <!-- ============================================ -->
+    <!-- PERMISOS DE CÁMARA -->
+    <!-- ============================================ -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.camera" android:required="false"/>
+    
+    <!-- ============================================ -->
+    <!-- PERMISOS DE NOTIFICACIONES -->
+    <!-- ============================================ -->
+    <!-- Para Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Para notificaciones exactas/alarmas -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <!-- Vibración para notificaciones -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    
+    <!-- ============================================ -->
+    <!-- PERMISOS ADICIONALES ÚTILES -->
+    <!-- ============================================ -->
+    <!-- Para mantener el dispositivo despierto durante operaciones largas -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Para recibir notificaciones al arrancar el dispositivo -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application
-        android:label="am_proyectofinal_ljl"
+        android:label="Busca Compañero"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:enableOnBackInvokedCallback="true">
+        android:usesCleartextTraffic="true">
+        
+        <!-- ============================================ -->
+        <!-- ACTIVIDAD PRINCIPAL -->
+        <!-- ============================================ -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -19,34 +71,85 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
-            <!-- Specifies an Android theme to apply to this Activity as soon as
-                 the Android process has started. This theme is visible to the user
-                 while the Flutter UI initializes. After that, this theme continues
-                 to determine the Window background behind the Flutter UI. -->
+            
+            <!-- Splash Screen -->
             <meta-data
-              android:name="io.flutter.embedding.android.NormalTheme"
-              android:resource="@style/NormalTheme"
-              />
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"/>
+            
+            <!-- Intent Filter Principal -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            
+            <!-- ============================================ -->
+            <!-- DEEP LINKS PARA SUPABASE AUTH -->
+            <!-- ============================================ -->
+            <!-- Recuerda cambiar "myapp" por tu esquema real del .env -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <!-- Reset password -->
+                <data
+                    android:scheme="myapp"
+                    android:host="reset-password"/>
+                <!-- Email verification -->
+                <data
+                    android:scheme="myapp"
+                    android:host="verify-email"/>
+            </intent-filter>
         </activity>
-        <!-- Don't delete the meta-data below.
-             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        
+        <!-- ============================================ -->
+        <!-- CONFIGURACIÓN DE NOTIFICACIONES LOCALES -->
+        <!-- ============================================ -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false"/>
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+
+        <!-- ============================================ -->
+        <!-- METADATA DE FLUTTER -->
+        <!-- ============================================ -->
         <meta-data
             android:name="flutterEmbedding"
-            android:value="2" />
+            android:value="2"/>
     </application>
-    <!-- Required to query activities that can process text, see:
-         https://developer.android.com/training/package-visibility and
-         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
-
-         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    
+    <!-- ============================================ -->
+    <!-- QUERIES PARA INTENTS EXTERNOS -->
+    <!-- ============================================ -->
     <queries>
+        <!-- Para abrir enlaces web -->
         <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+        <!-- Para abrir Google Maps -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="geo"/>
+        </intent>
+        <!-- Para hacer llamadas telefónicas -->
+        <intent>
+            <action android:name="android.intent.action.DIAL"/>
+            <data android:scheme="tel"/>
+        </intent>
+        <!-- Para enviar emails -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
         </intent>
     </queries>
 </manifest>
