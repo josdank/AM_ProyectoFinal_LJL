@@ -239,7 +239,7 @@ Future<void> initDependencies() async {
   );
 
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(supabaseClient: sl<SupabaseClient>()),
+    () => AuthRepositoryImpl(datasource: sl<AuthDatasource>()),
   );
 
   sl.registerLazySingleton(() => RegisterUser(sl<AuthRepository>()));

@@ -87,7 +87,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   void _saveProfile() {
     if (_formKey.currentState!.validate()) {
-      // ✅ Verificar campos obligatorios
+      // Verificar campos obligatorios
       if (_selectedBirthDate == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
