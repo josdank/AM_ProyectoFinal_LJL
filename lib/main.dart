@@ -123,7 +123,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ✅ NUEVO: Wrapper principal con SafeArea
 class SafeAreaWrapper extends StatelessWidget {
   const SafeAreaWrapper({super.key});
 
@@ -318,7 +317,7 @@ class _HomePageContent extends StatelessWidget {
     );
   }
 
-  // ✅ NUEVO: Método para crear IconButtons con mejor área táctil
+  //Método para crear IconButtons con mejor área táctil
   Widget _buildAppBarIconButton({
     required IconData icon,
     required String tooltip,

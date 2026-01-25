@@ -1,14 +1,16 @@
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../../../../core/errors/exceptions.dart';
 import '../models/user_model.dart';
+
 
 abstract class AuthDatasource {
   Future<UserModel> signUp({
     required String email,
     required String password,
     String? fullName,
-    required String role, // ← agregado aquí
+    required List<String> roles,
   });
 
   Future<UserModel> signIn({
@@ -18,23 +20,25 @@ abstract class AuthDatasource {
 
   Future<void> signOut();
   Future<UserModel?> getCurrentUser();
+
   Future<void> sendPasswordResetEmail(String email);
+
   Stream<UserModel?> get authStateChanges;
 }
 
 class AuthDatasourceImpl implements AuthDatasource {
-  final SupabaseClient client;
+  final sb.SupabaseClient client;
 
   AuthDatasourceImpl({required this.client});
 
-  GoTrueClient get _auth => client.auth;
+  sb.GoTrueClient get _auth => client.auth;
 
   @override
   Future<UserModel> signUp({
     required String email,
     required String password,
     String? fullName,
-    required String role, // ← agregado aquí también
+    required List<String> roles,
   }) async {
     try {
       final response = await _auth.signUp(
@@ -42,7 +46,7 @@ class AuthDatasourceImpl implements AuthDatasource {
         password: password,
         data: {
           if (fullName != null) 'full_name': fullName,
-          'role': role,
+          'roles': roles,
         },
       );
 
@@ -50,9 +54,24 @@ class AuthDatasourceImpl implements AuthDatasource {
         throw const AuthException(message: 'Error al crear cuenta');
       }
 
+      //Insertar/Upsert en tabla public.users para que quede persistente
+      // (Esto evita depender solo de user_metadata)
+      await client.from('users').upsert({
+        'id': response.user!.id,
+        'email': email,
+        'full_name': fullName,
+        'roles': roles,
+        'email_confirmed': response.user!.emailConfirmedAt != null,
+      });
+
       return UserModel.fromSupabaseUser(response.user!);
-    } on AuthApiException catch (e) {
+    } on sb.AuthApiException catch (e) {
       throw AuthException(message: _parseError(e.message), code: e.code);
+    } on sb.PostgrestException catch (e) {
+      throw ServerException(
+        message: e.message,
+        statusCode: _tryInt(e.code),
+      );
     } catch (e) {
       throw AuthException(message: 'Error inesperado: $e');
     }
@@ -74,7 +93,7 @@ class AuthDatasourceImpl implements AuthDatasource {
       }
 
       return UserModel.fromSupabaseUser(response.user!);
-    } on AuthApiException catch (e) {
+    } on sb.AuthApiException catch (e) {
       throw AuthException(message: _parseError(e.message), code: e.code);
     } catch (e) {
       throw AuthException(message: 'Error inesperado: $e');
@@ -94,7 +113,19 @@ class AuthDatasourceImpl implements AuthDatasource {
   Future<UserModel?> getCurrentUser() async {
     try {
       final user = _auth.currentUser;
-      return user != null ? UserModel.fromSupabaseUser(user) : null;
+      if (user == null) return null;
+
+      //Traer roles reales desde public.users si existe
+      try {
+        final row = await client.from('users').select().eq('id', user.id).maybeSingle();
+        if (row != null) {
+          return UserModel.fromJson(Map<String, dynamic>.from(row));
+        }
+      } catch (_) {
+        // si falla, caemos a metadata
+      }
+
+      return UserModel.fromSupabaseUser(user);
     } catch (e) {
       throw AuthException(message: 'Error al obtener usuario: $e');
     }
@@ -104,9 +135,9 @@ class AuthDatasourceImpl implements AuthDatasource {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       final redirectUrl = dotenv.env['RESET_PASSWORD_URL'] ??
-                         'http://localhost:3000/reset-password';
+          'https://ljl-colive.netlify.app/reset/';
       await _auth.resetPasswordForEmail(email, redirectTo: redirectUrl);
-    } on AuthApiException catch (e) {
+    } on sb.AuthApiException catch (e) {
       throw AuthException(message: _parseError(e.message));
     } catch (e) {
       throw AuthException(message: 'Error al enviar email: $e');
@@ -114,14 +145,22 @@ class AuthDatasourceImpl implements AuthDatasource {
   }
 
   @override
-  Stream<UserModel?> get authStateChanges =>
-      _auth.onAuthStateChange.map((event) => event.session?.user != null
-          ? UserModel.fromSupabaseUser(event.session!.user)
-          : null);
+  Stream<UserModel?> get authStateChanges => _auth.onAuthStateChange.asyncMap((event) async {
+        final user = event.session?.user;
+        if (user == null) return null;
 
-  /// Método auxiliar para parsear errores de Supabase
-  String _parseError(String message) {
-    // Aquí puedes mapear mensajes de Supabase a algo más amigable
-    return message;
-  }
+        //intentar traer desde public.users
+        try {
+          final row = await client.from('users').select().eq('id', user.id).maybeSingle();
+          if (row != null) {
+            return UserModel.fromJson(Map<String, dynamic>.from(row));
+          }
+        } catch (_) {}
+
+        return UserModel.fromSupabaseUser(user);
+      });
+
+  String _parseError(String message) => message;
+
+  int? _tryInt(String? s) => s == null ? null : int.tryParse(s);
 }

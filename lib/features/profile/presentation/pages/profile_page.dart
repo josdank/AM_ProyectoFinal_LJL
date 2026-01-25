@@ -112,7 +112,7 @@ class ProfilePage extends StatelessWidget {
                         SaveHabitsRequested(habits: result),
                       );
 
-                      // ✅ NUEVO: Actualizar el perfil para marcar como completo
+                      // NUEVO: Actualizar el perfil para marcar como completo
                       final updatedProfile = Profile(
                         id: state.profile.id,
                         fullName: state.profile.fullName,

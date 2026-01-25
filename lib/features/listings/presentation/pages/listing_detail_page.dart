@@ -163,7 +163,7 @@ class ListingDetailPage extends StatelessWidget {
           ),
         ],
       ),
-      // ✅ NUEVA IMPLEMENTACIÓN DEL BOTTOM NAVIGATION BAR
+      // NUEVA IMPLEMENTACIÓN DEL BOTTOM NAVIGATION BAR
       bottomNavigationBar: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
           if (authState is! AuthAuthenticated) {
