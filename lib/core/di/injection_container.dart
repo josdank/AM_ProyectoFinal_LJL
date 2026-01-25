@@ -124,6 +124,13 @@ import '../../features/geolocation/domain/usecases/calculate_distance.dart';
 import '../../features/geolocation/domain/usecases/search_nearby_places.dart';
 import '../../features/geolocation/presentation/bloc/map_bloc.dart';
 
+import '../../features/security/domain/usecases/add_reference.dart';
+import '../../features/security/domain/usecases/get_user_references.dart';
+import '../../features/security/domain/usecases/update_reference.dart';
+import '../../features/security/domain/usecases/delete_reference.dart';
+import '../../features/security/domain/usecases/send_verification_code.dart';
+import '../../features/security/domain/usecases/verify_reference.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -175,19 +182,28 @@ Future<void> initDependencies() async {
   // ============================================
   // SECURITY FEATURE
   // ============================================
+// ===== Verification & Security (Actividad 5) =====
   sl.registerLazySingleton<SecurityDatasource>(
     () => SecurityDatasourceImpl(client: sl<SupabaseClient>()),
   );
-
   sl.registerLazySingleton<SecurityRepository>(
     () => SecurityRepositoryImpl(datasource: sl<SecurityDatasource>()),
   );
-
+  
+  // UseCases de verificación y seguridad
   sl.registerLazySingleton(() => GetVerificationStatus(sl<SecurityRepository>()));
   sl.registerLazySingleton(() => SubmitVerification(sl<SecurityRepository>()));
   sl.registerLazySingleton(() => ReportUser(sl<SecurityRepository>()));
   sl.registerLazySingleton(() => BlockUser(sl<SecurityRepository>()));
   sl.registerLazySingleton(() => GetBlockedUsers(sl<SecurityRepository>()));
+  
+  // NUEVO: UseCases de referencias
+  sl.registerLazySingleton(() => GetUserReferences(sl<SecurityRepository>()));
+  sl.registerLazySingleton(() => AddReference(sl<SecurityRepository>()));
+  sl.registerLazySingleton(() => UpdateReference(sl<SecurityRepository>()));
+  sl.registerLazySingleton(() => DeleteReference(sl<SecurityRepository>()));
+  sl.registerLazySingleton(() => SendVerificationCode(sl<SecurityRepository>()));
+  sl.registerLazySingleton(() => VerifyReference(sl<SecurityRepository>()));
 
   sl.registerFactory(
     () => SecurityBloc(
@@ -196,6 +212,13 @@ Future<void> initDependencies() async {
       reportUser: sl<ReportUser>(),
       blockUser: sl<BlockUser>(),
       getBlockedUsers: sl<GetBlockedUsers>(),
+      // NUEVO: Inyección de use cases de referencias
+      getUserReferences: sl<GetUserReferences>(),
+      addReference: sl<AddReference>(),
+      updateReference: sl<UpdateReference>(),
+      deleteReference: sl<DeleteReference>(),
+      sendVerificationCode: sl<SendVerificationCode>(),
+      verifyReference: sl<VerifyReference>(),
     ),
   );
 

@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
-import '../../data/models/reference_model.dart';
+import '../entities/reference.dart'; // ✅ Importa la ENTIDAD, no el modelo
 import '../entities/user_block.dart';
 import '../entities/user_report.dart';
 import '../entities/verification.dart';
@@ -27,18 +27,36 @@ abstract class SecurityRepository {
 
   Future<Either<Failure, List<UserBlock>>> getBlockedUsers({required String blockerId});
 
-  // ===== REFERENCIAS =====
-  Future<List<ReferenceModel>> getUserReferences({required String userId});
-  Future<ReferenceModel> addReference({required ReferenceModel reference});
-  Future<ReferenceModel> updateReference({required ReferenceModel reference});
-  Future<void> deleteReference({required String referenceId});
-  Future<String> sendVerificationCode({
+  // ===== REFERENCIAS ===== ✅ CORREGIDO
+  Future<Either<Failure, List<Reference>>> getUserReferences({
+    required String userId,
+  });
+  
+  Future<Either<Failure, Reference>> addReference({
+    required String userId,
+    required String refereeName,
+    required String refereeEmail,
+    required String refereePhone,
+    required String relationship,
+    String? comments,
+    int? rating,
+  });
+  
+  Future<Either<Failure, Reference>> updateReference({
+    required Reference reference,
+  });
+  
+  Future<Either<Failure, void>> deleteReference({
+    required String referenceId,
+  });
+  
+  Future<Either<Failure, String>> sendVerificationCode({
     required String referenceId,
     required String refereeEmail,
   });
-  Future<ReferenceModel> verifyReference({
+  
+  Future<Either<Failure, Reference>> verifyReference({
     required String referenceId,
     required String code,
   });
-  
 }
