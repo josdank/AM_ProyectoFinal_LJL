@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
-import '../../../auth/presentation/widgets/auth_button.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -45,16 +44,21 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _handleRegister() {
     if (_formKey.currentState!.validate()) {
+      // Determinar roles basados en la selección
+      final roles = _role == 'tenant' 
+          ? ['user', 'tenant'] // Usuario con rol de arrendatario
+          : ['user', 'owner']; // Usuario con rol de propietario
+      
       context.read<AuthBloc>().add(
-            AuthRegisterRequested(
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-              fullName: _nameController.text.trim().isEmpty
-                  ? null
-                  : _nameController.text.trim(),
-              role: _role,
-            ),
-          );
+        AuthRegisterRequested(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          fullName: _nameController.text.trim().isEmpty
+              ? null
+              : _nameController.text.trim(),
+          roles: roles, // ENVIAR LISTA DE ROLES
+        ),
+      );
     }
   }
 
@@ -74,10 +78,56 @@ class _RegisterPageState extends State<RegisterPage> {
               barrierDismissible: false,
               builder: (context) => AlertDialog(
                 title: const Text('¡Cuenta Creada!'),
-                content: Text(
-                  state.requiresEmailConfirmation
-                      ? 'Hemos enviado un email de confirmación a ${state.email}. Por favor verifica tu email antes de iniciar sesión.'
-                      : 'Tu cuenta ha sido creada exitosamente.',
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      state.requiresEmailConfirmation
+                          ? 'Hemos enviado un email de confirmación a ${state.email}. Por favor verifica tu email antes de iniciar sesión.'
+                          : 'Tu cuenta ha sido creada exitosamente.',
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _role == 'tenant'
+                            ? Colors.blue.shade50
+                            : Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _role == 'tenant'
+                              ? Colors.blue.shade200
+                              : Colors.amber.shade200,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _role == 'tenant'
+                                ? Icons.search
+                                : Icons.home_work_outlined,
+                            color: _role == 'tenant'
+                                ? Colors.blue
+                                : Colors.amber.shade700,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _role == 'tenant'
+                                  ? 'Tu cuenta es de tipo: Arrendatario'
+                                  : 'Tu cuenta es de tipo: Propietario',
+                              style: TextStyle(
+                                color: _role == 'tenant'
+                                    ? Colors.blue.shade800
+                                    : Colors.amber.shade900,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 actions: [
                   TextButton(
@@ -113,9 +163,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Icon(
-                        Icons.person_add_outlined,
+                        _role == 'tenant' ? Icons.search : Icons.home_work_outlined,
                         size: 80,
-                        color: cs.primary,
+                        color: _role == 'tenant' ? Colors.blue : Colors.amber,
                       ),
                       const SizedBox(height: 24),
                       Text(
@@ -192,27 +242,74 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(height: 28),
 
-                      AuthButton(
-                        text: _role == 'tenant'
-                            ? 'Crear cuenta como Arrendatario'
-                            : 'Crear cuenta como Propietario',
-                        onPressed: _handleRegister,
-                        isLoading: isLoading,
-                        icon: Icons.person_add,
+                      Container(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: isLoading ? null : _handleRegister,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _role == 'tenant' 
+                                ? Colors.blue.shade600 
+                                : Colors.amber.shade600,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 2,
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      _role == 'tenant' 
+                                          ? Icons.search 
+                                          : Icons.home_work_outlined,
+                                      size: 22,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      _role == 'tenant'
+                                          ? 'Crear Cuenta de Arrendatario'
+                                          : 'Crear Cuenta de Propietario',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
                       ),
 
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 16),
 
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: cs.primary.withOpacity(0.08),
+                          color: _role == 'tenant'
+                              ? Colors.blue.withOpacity(0.08)
+                              : Colors.amber.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: cs.primary.withOpacity(0.25)),
+                          border: Border.all(
+                            color: _role == 'tenant'
+                                ? Colors.blue.withOpacity(0.25)
+                                : Colors.amber.withOpacity(0.25),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.info_outline, color: cs.primary),
+                            Icon(
+                              Icons.info_outline,
+                              color: _role == 'tenant' ? Colors.blue : Colors.amber,
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
@@ -268,9 +365,15 @@ class _RoleSelector extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: selected ? cs.primary.withOpacity(0.12) : Colors.white,
+            color: selected 
+                ? (role == 'tenant' 
+                    ? Colors.blue.withOpacity(0.12) 
+                    : Colors.amber.withOpacity(0.12))
+                : Colors.white,
             border: Border.all(
-              color: selected ? cs.primary : Colors.black12,
+              color: selected 
+                  ? (role == 'tenant' ? Colors.blue : Colors.amber)
+                  : Colors.black12,
               width: selected ? 1.4 : 1.0,
             ),
             boxShadow: [
@@ -287,7 +390,9 @@ class _RoleSelector extends StatelessWidget {
                 height: 42,
                 width: 42,
                 decoration: BoxDecoration(
-                  color: selected ? cs.primary : Colors.black12,
+                  color: selected 
+                      ? (role == 'tenant' ? Colors.blue : Colors.amber)
+                      : Colors.black12,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -321,7 +426,11 @@ class _RoleSelector extends StatelessWidget {
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 160),
                 child: selected
-                    ? Icon(Icons.check_circle, key: ValueKey(role), color: cs.primary)
+                    ? Icon(
+                        Icons.check_circle, 
+                        key: ValueKey(role), 
+                        color: role == 'tenant' ? Colors.blue : Colors.amber,
+                      )
                     : const Icon(Icons.circle_outlined, color: Colors.black26),
               ),
             ],

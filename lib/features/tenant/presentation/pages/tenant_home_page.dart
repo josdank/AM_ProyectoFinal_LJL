@@ -6,10 +6,11 @@ import '../../../../core/recommendations/recommendation_service.dart';
 import '../../../../core/theme/ljl_colors.dart';
 import '../../../listings/domain/entities/listing.dart';
 import '../../../listings/presentation/bloc/listing_bloc.dart';
+
 import '../../../listings/presentation/widgets/listing_card_widget.dart';
 import '../cubit/tenant_cubit.dart';
 import 'tenant_requests_page.dart';
-import 'tenant_favorites_page.dart';
+
 
 class TenantHomePage extends StatefulWidget {
   const TenantHomePage({super.key});
@@ -35,7 +36,6 @@ class _TenantHomePageState extends State<TenantHomePage> {
   Widget build(BuildContext context) {
     final tabs = [
       const _TenantListingsTab(),
-      const TenantFavoritesPage(),
       const TenantRequestsPage(),
     ];
 
@@ -46,7 +46,6 @@ class _TenantHomePageState extends State<TenantHomePage> {
           IconButton(
             tooltip: 'Tema',
             onPressed: () {
-              // Dejar la acción para Settings (si la integras en el menú)
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('En Ajustes podrás cambiar el tema (dark mode).')),
               );
@@ -81,75 +80,85 @@ class _TenantListingsTab extends StatelessWidget {
 
     return BlocBuilder<ListingBloc, ListingState>(
       builder: (context, state) {
-        if (state is ListingsLoading) {
+        if (state is ListingLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (state is ListingsError) {
-          return Center(child: Text(state.message, textAlign: TextAlign.center));
+        
+        if (state is ListingError) {
+          return Center(
+            child: Text(
+              state.message,
+              textAlign: TextAlign.center,
+            ),
+          );
         }
-        if (state is! ListingsLoaded) {
-          return const SizedBox.shrink();
-        }
+        
+        if (state is ListingsLoaded) {
+          final listings = state.listings;
+          final rec = context.read<RecommendationService>().recommend(listings, limit: 6);
 
-        final listings = state.listings;
-        final rec = context.read<RecommendationService>().recommend(listings, limit: 6);
-
-        return RefreshIndicator(
-          onRefresh: () async => context.read<ListingBloc>().add(const ListingsLoadRequested()),
-          child: ListView(
-            padding: const EdgeInsets.all(14),
-            children: [
-              // Recomendaciones
-              if (rec.isNotEmpty) ...[
-                Row(
-                  children: [
-                    const Icon(Icons.auto_awesome, color: LjlColors.gold),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Sugeridos para ti',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          return RefreshIndicator(
+            onRefresh: () async => context.read<ListingBloc>().add(const ListingsLoadRequested()),
+            child: ListView(
+              padding: const EdgeInsets.all(14),
+              children: [
+                if (rec.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.auto_awesome, color: LjlColors.gold),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Sugeridos para ti',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 235,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemBuilder: (context, i) => SizedBox(
+                        width: 320,
+                        child: _TenantListingActions(
+                          listing: rec[i],
+                          tenantId: userId,
+                          child: ListingCardWidget(listing: rec[i]),
+                        ),
+                      ),
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemCount: rec.length,
                     ),
-                  ],
+                  ),
+                  const SizedBox(height: 18),
+                ],
+
+                Text(
+                  'Explora viviendas',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 10),
-                SizedBox(
-                  height: 235,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, i) => SizedBox(
-                      width: 320,
-                      child: _TenantListingActions(
-                        listing: rec[i],
-                        tenantId: userId,
-                        child: ListingCardWidget(listing: rec[i]),
-                      ),
+
+                ...listings.map((l) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _TenantListingActions(
+                      listing: l,
+                      tenantId: userId,
+                      child: ListingCardWidget(listing: l),
                     ),
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemCount: rec.length,
-                  ),
-                ),
-                const SizedBox(height: 18),
+                  );
+                }).toList(),
               ],
+            ),
+          );
+        }
 
-              Text(
-                'Explora viviendas',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 10),
-
-              ...listings.map((l) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _TenantListingActions(
-                    listing: l,
-                    tenantId: userId,
-                    child: ListingCardWidget(listing: l),
-                  ),
-                );
-              }),
-            ],
-          ),
-        );
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }
@@ -179,13 +188,16 @@ class _TenantListingActions extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () async {
-                      // track view for recs
                       await context.read<RecommendationService>().trackView(listing);
-                      // toggle favorite
-                      await context.read<TenantCubit>().toggleFavorite(tenantId: tenantId, listing: listing);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Favorito actualizado')),
+                      await context.read<TenantCubit>().toggleFavorite(
+                        tenantId: tenantId, 
+                        listing: listing,
                       );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Favorito actualizado')),
+                        );
+                      }
                     },
                     icon: const Icon(Icons.favorite_border),
                     label: const Text('Favorito'),
@@ -196,7 +208,7 @@ class _TenantListingActions extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () async {
                       final message = await _askMessage(context);
-                      if (context.mounted) {
+                      if (context.mounted && message != null) {
                         await context.read<TenantCubit>().applyToListing(
                               tenantId: tenantId,
                               listing: listing,
@@ -233,8 +245,17 @@ class _TenantListingActions extends StatelessWidget {
           maxLines: 3,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Omitir')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim().isEmpty ? null : ctrl.text.trim()), child: const Text('Enviar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null), 
+            child: const Text('Omitir')
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(
+              ctx, 
+              ctrl.text.trim().isEmpty ? null : ctrl.text.trim()
+            ), 
+            child: const Text('Enviar')
+          ),
         ],
       ),
     );
