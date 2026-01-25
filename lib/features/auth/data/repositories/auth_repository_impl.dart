@@ -1,91 +1,122 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/exceptions.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/errors/failures.dart';
-import '../../domain/entities/user.dart';
+import '../../domain/entities/user.dart' as app_user;
 import '../../domain/repositories/auth_repository.dart';
-import '../datasources/auth_datasource.dart';
+import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthDatasource datasource;
+  final SupabaseClient supabaseClient;
 
-  AuthRepositoryImpl({required this.datasource});
+  AuthRepositoryImpl({required this.supabaseClient});
 
   @override
-  Future<Either<Failure, User>> signUp({
+  Future<Either<Failure, app_user.User>> signUp({
     required String email,
     required String password,
     String? fullName,
-    String role = 'tenant',
+    List<String> roles = const ['user'],
   }) async {
     try {
-      final user = await datasource.signUp(
+      final authResponse = await supabaseClient.auth.signUp(
         email: email,
         password: password,
-        fullName: fullName,
-        role: role,
+        data: {
+          'full_name': fullName,
+          'roles': roles,
+        },
       );
-      return Right(user);
+
+      if (authResponse.user == null) {
+        return Left(ServerFailure(message: 'No se pudo crear el usuario'));
+      }
+
+      // Crear registro en la tabla public.users
+      await supabaseClient.from('users').insert({
+        'id': authResponse.user!.id,
+        'email': email,
+        'full_name': fullName,
+        'roles': roles,
+        'email_confirmed': authResponse.user!.emailConfirmedAt != null,
+      }); 
+      final user = UserModel.fromSupabaseUser(authResponse.user!);
+      return Right(user.toEntity());
     } on AuthException catch (e) {
       return Left(AuthFailure(message: e.message));
+    } on PostgrestException catch (e) {
+      return Left(DatabaseFailure(message: e.message));
     } catch (e) {
-      return Left(AuthFailure(message: 'Error inesperado: $e'));
+      return Left(ServerFailure(message: 'Error inesperado: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, User>> signIn({
+  Future<Either<Failure, app_user.User>> signIn({
     required String email,
     required String password,
   }) async {
     try {
-      final user = await datasource.signIn(
+      final authResponse = await supabaseClient.auth.signInWithPassword(
         email: email,
         password: password,
       );
-      return Right(user);
+
+      final user = UserModel.fromSupabaseUser(authResponse.user!);
+      return Right(user.toEntity());
     } on AuthException catch (e) {
       return Left(AuthFailure(message: e.message));
     } catch (e) {
-      return Left(AuthFailure(message: 'Error inesperado: $e'));
+      return Left(ServerFailure(message: 'Error inesperado: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, void>> signOut() async {
     try {
-      await datasource.signOut();
+      await supabaseClient.auth.signOut();
       return const Right(null);
-    } on AuthException catch (e) {
-      return Left(AuthFailure(message: e.message));
     } catch (e) {
-      return Left(AuthFailure(message: 'Error al cerrar sesión: $e'));
+      return Left(ServerFailure(message: 'Error al cerrar sesión'));
     }
   }
 
   @override
-  Future<Either<Failure, User?>> getCurrentUser() async {
+  Future<Either<Failure, app_user.User?>> getCurrentUser() async {
     try {
-      final user = await datasource.getCurrentUser();
-      return Right(user);
-    } on AuthException catch (e) {
-      return Left(AuthFailure(message: e.message));
+      final session = supabaseClient.auth.currentSession;
+      if (session == null) {
+        return const Right(null);
+      }
+
+      final user = session.user;
+      if (user == null) {
+        return const Right(null);
+      }
+
+      // Obtener datos completos de la tabla users
+      final response = await supabaseClient
+          .from('users')
+          .select()
+          .eq('id', user.id)
+          .single();
+
+      if (response == null) { 
+        return const Right(null);
+      }
+
+      final userModel = UserModel.fromJson(response);
+      return Right(userModel.toEntity());
     } catch (e) {
-      return Left(AuthFailure(message: 'Error al obtener usuario: $e'));
+      return Left(ServerFailure(message: 'Error obteniendo usuario: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, void>> sendPasswordResetEmail(String email) async {
-    try {
-      await datasource.sendPasswordResetEmail(email);
-      return const Right(null);
-    } on AuthException catch (e) {
-      return Left(AuthFailure(message: e.message));
-    } catch (e) {
-      return Left(AuthFailure(message: 'Error al enviar email: $e'));
-    }
+  Stream<app_user.User?> get authStateChanges {
+    return supabaseClient.auth.onAuthStateChange.map((event) {
+      final user = event.session?.user;
+      if (user == null) return null;
+      return UserModel.fromSupabaseUser(user).toEntity();
+    });
   }
-
-  @override
-  Stream<User?> get authStateChanges => datasource.authStateChanges;
 }

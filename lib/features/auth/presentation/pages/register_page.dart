@@ -45,6 +45,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _handleRegister() {
     if (_formKey.currentState!.validate()) {
+      // Determinar roles basado en la selección
+      final roles = _accountType == 'tenant' 
+          ? ['user', 'tenant'] // Usuario con rol de arrendatario
+          : ['user']; // Usuario normal
+      
       context.read<AuthBloc>().add(
         AuthRegisterRequested(
           email: _emailController.text.trim(),
@@ -52,7 +57,7 @@ class _RegisterPageState extends State<RegisterPage> {
           fullName: _nameController.text.trim().isEmpty
               ? null
               : _nameController.text.trim(),
-          role: _accountType, // 'normal' o 'tenant'
+          roles: roles, // ENVIAR LISTA DE ROLES
         ),
       );
     }

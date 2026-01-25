@@ -21,6 +21,7 @@ import 'package:shared_preferences_foundation/shared_preferences_foundation.dart
 import 'package:sqflite_darwin/sqflite_darwin.dart' as sqflite_darwin;
 import 'package:url_launcher_ios/url_launcher_ios.dart' as url_launcher_ios;
 import 'package:app_links_linux/app_links_linux.dart' as app_links_linux;
+import 'package:connectivity_plus/connectivity_plus.dart' as connectivity_plus;
 import 'package:file_selector_linux/file_selector_linux.dart' as file_selector_linux;
 import 'package:flutter_local_notifications_linux/flutter_local_notifications_linux.dart' as flutter_local_notifications_linux;
 import 'package:geolocator_linux/geolocator_linux.dart' as geolocator_linux;
@@ -184,6 +185,15 @@ class _PluginRegistrant {
       } catch (err) {
         print(
           '`app_links_linux` threw an error: $err. '
+          'The app may not function as expected until you remove this plugin from pubspec.yaml'
+        );
+      }
+
+      try {
+        connectivity_plus.ConnectivityPlusLinuxPlugin.registerWith();
+      } catch (err) {
+        print(
+          '`connectivity_plus` threw an error: $err. '
           'The app may not function as expected until you remove this plugin from pubspec.yaml'
         );
       }

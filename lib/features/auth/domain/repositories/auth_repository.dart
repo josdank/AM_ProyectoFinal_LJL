@@ -7,19 +7,17 @@ abstract class AuthRepository {
     required String email,
     required String password,
     String? fullName,
-    String role = 'tenant',
+    List<String> roles,
   });
-
+  
   Future<Either<Failure, User>> signIn({
     required String email,
     required String password,
   });
-
+  
   Future<Either<Failure, void>> signOut();
-
+  
   Future<Either<Failure, User?>> getCurrentUser();
-
-  Future<Either<Failure, void>> sendPasswordResetEmail(String email);
-
+  
   Stream<User?> get authStateChanges;
 }

@@ -7,10 +7,15 @@
       "name": "examen2",
       "version": "1.0.0+1",
       "dependencies": [
+        "animations",
         "cached_network_image",
+        "connectivity_plus",
         "cupertino_icons",
         "dartz",
         "equatable",
+        "firebase_analytics",
+        "firebase_core",
+        "firebase_crashlytics",
         "flutter",
         "flutter_bloc",
         "flutter_dotenv",
@@ -18,11 +23,13 @@
         "flutter_map",
         "geolocator",
         "get_it",
+        "go_router",
         "http",
         "image_picker",
         "intl",
         "latlong2",
         "permission_handler",
+        "provider",
         "shared_preferences",
         "shimmer",
         "supabase_flutter",
@@ -57,6 +64,46 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "connectivity_plus",
+      "version": "6.1.5",
+      "dependencies": [
+        "collection",
+        "connectivity_plus_platform_interface",
+        "flutter",
+        "flutter_web_plugins",
+        "meta",
+        "nm",
+        "web"
+      ]
+    },
+    {
+      "name": "animations",
+      "version": "2.1.1",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
+      "name": "provider",
+      "version": "6.1.5+1",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "nested"
+      ]
+    },
+    {
+      "name": "go_router",
+      "version": "14.8.1",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "flutter_web_plugins",
+        "logging",
+        "meta"
       ]
     },
     {
@@ -203,6 +250,38 @@
         "geolocator_platform_interface",
         "geolocator_web",
         "geolocator_windows"
+      ]
+    },
+    {
+      "name": "firebase_crashlytics",
+      "version": "4.3.10",
+      "dependencies": [
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "firebase_crashlytics_platform_interface",
+        "flutter",
+        "stack_trace"
+      ]
+    },
+    {
+      "name": "firebase_analytics",
+      "version": "11.6.0",
+      "dependencies": [
+        "firebase_analytics_platform_interface",
+        "firebase_analytics_web",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter"
+      ]
+    },
+    {
+      "name": "firebase_core",
+      "version": "3.15.2",
+      "dependencies": [
+        "firebase_core_platform_interface",
+        "firebase_core_web",
+        "flutter",
+        "meta"
       ]
     },
     {
@@ -366,6 +445,46 @@
         "string_scanner",
         "term_glyph"
       ]
+    },
+    {
+      "name": "nm",
+      "version": "0.5.0",
+      "dependencies": [
+        "dbus"
+      ]
+    },
+    {
+      "name": "web",
+      "version": "1.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "connectivity_plus_platform_interface",
+      "version": "2.0.1",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "flutter_web_plugins",
+      "version": "0.0.0",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
+      "name": "nested",
+      "version": "1.0.0",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
+      "name": "logging",
+      "version": "1.3.0",
+      "dependencies": []
     },
     {
       "name": "fixnum",
@@ -636,11 +755,6 @@
       ]
     },
     {
-      "name": "web",
-      "version": "1.1.1",
-      "dependencies": []
-    },
-    {
       "name": "http_parser",
       "version": "4.1.2",
       "dependencies": [
@@ -758,9 +872,61 @@
       ]
     },
     {
-      "name": "logging",
-      "version": "1.3.0",
-      "dependencies": []
+      "name": "firebase_crashlytics_platform_interface",
+      "version": "3.8.10",
+      "dependencies": [
+        "_flutterfire_internals",
+        "collection",
+        "firebase_core",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_core_platform_interface",
+      "version": "6.0.2",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "flutter_test",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_analytics_web",
+      "version": "0.5.10+16",
+      "dependencies": [
+        "_flutterfire_internals",
+        "firebase_analytics_platform_interface",
+        "firebase_core",
+        "firebase_core_web",
+        "flutter",
+        "flutter_web_plugins"
+      ]
+    },
+    {
+      "name": "firebase_analytics_platform_interface",
+      "version": "4.4.3",
+      "dependencies": [
+        "_flutterfire_internals",
+        "firebase_core",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_core_web",
+      "version": "2.24.1",
+      "dependencies": [
+        "firebase_core_platform_interface",
+        "flutter",
+        "flutter_web_plugins",
+        "meta",
+        "web"
+      ]
     },
     {
       "name": "url_launcher",
@@ -799,15 +965,6 @@
         "app_links_platform_interface",
         "app_links_web",
         "flutter"
-      ]
-    },
-    {
-      "name": "provider",
-      "version": "6.1.5+1",
-      "dependencies": [
-        "collection",
-        "flutter",
-        "nested"
       ]
     },
     {
@@ -884,6 +1041,23 @@
       ]
     },
     {
+      "name": "dbus",
+      "version": "0.7.11",
+      "dependencies": [
+        "args",
+        "ffi",
+        "meta",
+        "xml"
+      ]
+    },
+    {
+      "name": "plugin_platform_interface",
+      "version": "2.1.8",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
       "name": "typed_data",
       "version": "1.4.0",
       "dependencies": [
@@ -915,20 +1089,6 @@
       "dependencies": [
         "meta",
         "path"
-      ]
-    },
-    {
-      "name": "flutter_web_plugins",
-      "version": "0.0.0",
-      "dependencies": [
-        "flutter"
-      ]
-    },
-    {
-      "name": "plugin_platform_interface",
-      "version": "2.1.8",
-      "dependencies": [
-        "meta"
       ]
     },
     {
@@ -1039,16 +1199,6 @@
       ]
     },
     {
-      "name": "dbus",
-      "version": "0.7.11",
-      "dependencies": [
-        "args",
-        "ffi",
-        "meta",
-        "xml"
-      ]
-    },
-    {
       "name": "wkt_parser",
       "version": "2.0.0",
       "dependencies": []
@@ -1107,6 +1257,17 @@
       "version": "0.1.1",
       "dependencies": [
         "dbus",
+        "meta"
+      ]
+    },
+    {
+      "name": "_flutterfire_internals",
+      "version": "1.3.59",
+      "dependencies": [
+        "collection",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter",
         "meta"
       ]
     },
@@ -1261,15 +1422,13 @@
       ]
     },
     {
-      "name": "nested",
-      "version": "1.0.0",
-      "dependencies": [
-        "flutter"
-      ]
-    },
-    {
       "name": "vm_service",
       "version": "15.0.2",
+      "dependencies": []
+    },
+    {
+      "name": "args",
+      "version": "2.7.0",
       "dependencies": []
     },
     {
@@ -1325,11 +1484,6 @@
         "collection",
         "meta"
       ]
-    },
-    {
-      "name": "args",
-      "version": "2.7.0",
-      "dependencies": []
     },
     {
       "name": "unicode",

@@ -8,15 +8,21 @@ class UserModel extends User {
     super.fullName,
     required super.emailConfirmed,
     super.createdAt,
+    super.roles = const ['user'], // AGREGAR
   });
 
   factory UserModel.fromSupabaseUser(supabase.User user) {
+    // Obtener roles de user_metadata
+    final metadata = user.userMetadata ?? {};
+    final roles = List<String>.from(metadata['roles'] ?? ['user']);
+    
     return UserModel(
       id: user.id,
       email: user.email!,
-      fullName: user.userMetadata?['full_name'] as String?,
+      fullName: metadata['full_name'] as String?,
       emailConfirmed: user.emailConfirmedAt != null,
       createdAt: DateTime.parse(user.createdAt!),
+      roles: roles, // AGREGAR
     );
   }
 
@@ -29,6 +35,7 @@ class UserModel extends User {
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at'] as String)
           : null,
+      roles: List<String>.from(json['roles'] ?? ['user']), 
     );
   }
 
@@ -39,6 +46,7 @@ class UserModel extends User {
       'full_name': fullName,
       'email_confirmed': emailConfirmed,
       'created_at': createdAt?.toIso8601String(),
+      'roles': roles, 
     };
   }
 
@@ -48,5 +56,6 @@ class UserModel extends User {
     fullName: fullName,
     emailConfirmed: emailConfirmed,
     createdAt: createdAt,
+    roles: roles, 
   );
 }

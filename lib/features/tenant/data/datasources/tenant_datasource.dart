@@ -1,93 +1,105 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../../../../core/errors/exceptions.dart';
+import '../../../../core/errors/failures.dart';
 import '../models/application_model.dart';
 import '../models/favorite_model.dart';
 
-abstract class TenantDatasource {
-  Future<void> toggleFavorite({
-    required String userId,
-    required String listingId,
-  });
-
-  Future<bool> isFavorite({
-    required String userId,
-    required String listingId,
-  });
-
-  Future<List<FavoriteModel>> getFavorites({
-    required String userId,
-  });
-
+abstract class TenantDataSource {  // CAMBIAR de TenantDatasource a TenantDataSource
+  Future<List<FavoriteModel>> getFavorites(String userId);
+  Future<void> addFavorite(String userId, String listingId);
+  Future<void> removeFavorite(String userId, String listingId);
+  Future<bool> isFavorite(String userId, String listingId);
+  
+  Future<List<ApplicationModel>> getApplications(String tenantId);
   Future<ApplicationModel> createApplication({
     required String tenantId,
     required String listingId,
     String? message,
   });
-
-  Future<List<ApplicationModel>> getMyApplications({
-    required String tenantId,
-  });
-
-  Future<void> cancelApplication({required String applicationId});
+  Future<void> cancelApplication(String applicationId);
 }
 
-class TenantDatasourceImpl implements TenantDatasource {
-  final SupabaseClient client;
+class TenantDataSourceImpl implements TenantDataSource {
+  final SupabaseClient supabaseClient;
 
-  TenantDatasourceImpl(this.client);
-
-  static const _fav = 'favorites';
-  static const _apps = 'applications';
+  TenantDataSourceImpl({required this.supabaseClient});
 
   @override
-  Future<void> toggleFavorite({required String userId, required String listingId}) async {
+  Future<List<FavoriteModel>> getFavorites(String userId) async {
     try {
-      final existing = await client
-          .from(_fav)
-          .select('id')
+      final response = await supabaseClient
+          .from('favorites')
+          .select()
           .eq('user_id', userId)
-          .eq('listing_id', listingId)
-          .maybeSingle();
+          .order('created_at', ascending: false);
 
-      if (existing != null) {
-        await client.from(_fav).delete().eq('id', existing['id']);
-      } else {
-        await client.from(_fav).insert({'user_id': userId, 'listing_id': listingId});
+      if (response != null && response is List) {
+        return response
+            .map<FavoriteModel>((item) => FavoriteModel.fromJson(item))
+            .toList();
       }
-    } on PostgrestException catch (e) {
-      throw ServerException(message: e.message, statusCode: _tryInt(e.code));
+      return [];
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw DatabaseFailure(message: 'Error obteniendo favoritos: $e');
     }
   }
 
   @override
-  Future<bool> isFavorite({required String userId, required String listingId}) async {
+  Future<void> addFavorite(String userId, String listingId) async {
     try {
-      final row = await client
-          .from(_fav)
+      await supabaseClient.from('favorites').insert({
+        'user_id': userId,
+        'listing_id': listingId,
+      });
+    } catch (e) {
+      throw DatabaseFailure(message: 'Error agregando favorito: $e');
+    }
+  }
+
+  @override
+  Future<void> removeFavorite(String userId, String listingId) async {
+    try {
+      await supabaseClient
+          .from('favorites')
+          .delete()
+          .eq('user_id', userId)
+          .eq('listing_id', listingId);
+    } catch (e) {
+      throw DatabaseFailure(message: 'Error eliminando favorito: $e');
+    }
+  }
+
+  @override
+  Future<bool> isFavorite(String userId, String listingId) async {
+    try {
+      final response = await supabaseClient
+          .from('favorites')
           .select('id')
           .eq('user_id', userId)
-          .eq('listing_id', listingId)
-          .maybeSingle();
-      return row != null;
-    } on PostgrestException catch (e) {
-      throw ServerException(message: e.message, statusCode: _tryInt(e.code));
+          .eq('listing_id', listingId);
+
+      return response != null && response is List && response.isNotEmpty;
     } catch (e) {
-      throw ServerException(message: e.toString());
+      return false;
     }
   }
 
   @override
-  Future<List<FavoriteModel>> getFavorites({required String userId}) async {
+  Future<List<ApplicationModel>> getApplications(String tenantId) async {
     try {
-      final rows = await client.from(_fav).select().eq('user_id', userId).order('created_at', ascending: false);
-      return (rows as List).map((e) => FavoriteModel.fromJson(Map<String, dynamic>.from(e))).toList();
-    } on PostgrestException catch (e) {
-      throw ServerException(message: e.message, statusCode: _tryInt(e.code));
+      final response = await supabaseClient
+          .from('applications')
+          .select()
+          .eq('tenant_id', tenantId)
+          .order('applied_at', ascending: false);
+
+      if (response != null && response is List) {
+        return response
+            .map<ApplicationModel>((item) => ApplicationModel.fromJson(item))
+            .toList();
+      }
+      return [];
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw DatabaseFailure(message: 'Error obteniendo aplicaciones: $e');
     }
   }
 
@@ -98,8 +110,8 @@ class TenantDatasourceImpl implements TenantDatasource {
     String? message,
   }) async {
     try {
-      final row = await client
-          .from(_apps)
+      final response = await supabaseClient
+          .from('applications')
           .insert({
             'tenant_id': tenantId,
             'listing_id': listingId,
@@ -109,36 +121,21 @@ class TenantDatasourceImpl implements TenantDatasource {
           .select()
           .single();
 
-      return ApplicationModel.fromJson(Map<String, dynamic>.from(row));
-    } on PostgrestException catch (e) {
-      throw ServerException(message: e.message, statusCode: _tryInt(e.code));
+      return ApplicationModel.fromJson(response);
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw DatabaseFailure(message: 'Error creando aplicación: $e');
     }
   }
 
   @override
-  Future<List<ApplicationModel>> getMyApplications({required String tenantId}) async {
+  Future<void> cancelApplication(String applicationId) async {
     try {
-      final rows = await client.from(_apps).select().eq('tenant_id', tenantId).order('created_at', ascending: false);
-      return (rows as List).map((e) => ApplicationModel.fromJson(Map<String, dynamic>.from(e))).toList();
-    } on PostgrestException catch (e) {
-      throw ServerException(message: e.message, statusCode: _tryInt(e.code));
+      await supabaseClient
+          .from('applications')
+          .update({'status': 'canceled'})
+          .eq('id', applicationId);
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw DatabaseFailure(message: 'Error cancelando aplicación: $e');
     }
   }
-
-  @override
-  Future<void> cancelApplication({required String applicationId}) async {
-    try {
-      await client.from(_apps).delete().eq('id', applicationId);
-    } on PostgrestException catch (e) {
-      throw ServerException(message: e.message, statusCode: _tryInt(e.code));
-    } catch (e) {
-      throw ServerException(message: e.toString());
-    }
-  }
-
-  int? _tryInt(String? s) => s == null ? null : int.tryParse(s);
 }

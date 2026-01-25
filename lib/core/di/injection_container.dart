@@ -1,6 +1,20 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+// ============================================
+// ANALYTICS SERVICE IMPORT (AGREGAR ESTO)
+// ============================================
+import '../../core/analytics/analytics_service.dart';
+
+// ============================================
+// TENANT FEATURE IMPORTS
+// ============================================
+import '../../features/tenant/data/datasources/tenant_datasource.dart';
+import '../../features/tenant/data/repositories/tenant_repository_impl.dart';
+import '../../features/tenant/domain/repositories/tenant_repository.dart';
+import '../../features/tenant/presentation/cubit/tenant_cubit.dart';
+
 import '../../features/connections/data/datasources/connection_datasource.dart';
 import '../../features/connections/data/repositories/connection_repository_impl.dart';
 import '../../features/connections/domain/repositories/connection_repository.dart';
@@ -106,13 +120,30 @@ Future<void> initDependencies() async {
   // ============================================
   // EXTERNAL
   // ============================================
-  // ===== Connections (Actividad 2) =====
+  sl.registerLazySingleton<SupabaseClient>(
+    () => Supabase.instance.client,
+  );
+
+  sl.registerLazySingleton(() => FlutterLocalNotificationsPlugin());
+
+  // ============================================
+  // ANALYTICS SERVICE (SOLO UNA VEZ)
+  // ============================================
+  sl.registerLazySingleton<AnalyticsService>(
+    () => DebugAnalyticsService(),
+  );
+
+  // ============================================
+  // CONNECTIONS FEATURE
+  // ============================================
   sl.registerLazySingleton<ConnectionDatasource>(
     () => ConnectionDatasourceImpl(client: sl<SupabaseClient>()),
   );
+
   sl.registerLazySingleton<ConnectionRepository>(
     () => ConnectionRepositoryImpl(datasource: sl<ConnectionDatasource>()),
   );
+
   sl.registerLazySingleton(() => SendInterest(sl<ConnectionRepository>()));
   sl.registerLazySingleton(() => AcceptInterest(sl<ConnectionRepository>()));
   sl.registerLazySingleton(() => RejectInterest(sl<ConnectionRepository>()));
@@ -131,13 +162,17 @@ Future<void> initDependencies() async {
     ),
   );
 
-  // ===== Verification & Security (Actividad 5) =====
+  // ============================================
+  // SECURITY FEATURE
+  // ============================================
   sl.registerLazySingleton<SecurityDatasource>(
     () => SecurityDatasourceImpl(client: sl<SupabaseClient>()),
   );
+
   sl.registerLazySingleton<SecurityRepository>(
     () => SecurityRepositoryImpl(datasource: sl<SecurityDatasource>()),
   );
+
   sl.registerLazySingleton(() => GetVerificationStatus(sl<SecurityRepository>()));
   sl.registerLazySingleton(() => SubmitVerification(sl<SecurityRepository>()));
   sl.registerLazySingleton(() => ReportUser(sl<SecurityRepository>()));
@@ -154,17 +189,20 @@ Future<void> initDependencies() async {
     ),
   );
 
-  // ===== Notifications (Actividad 7) =====
-  sl.registerLazySingleton(() => FlutterLocalNotificationsPlugin());
+  // ============================================
+  // NOTIFICATIONS FEATURE
+  // ============================================
   sl.registerLazySingleton<NotificationDatasource>(
     () => NotificationDatasourceImpl(
       plugin: sl<FlutterLocalNotificationsPlugin>(),
       client: sl<SupabaseClient>(),
     ),
   );
+
   sl.registerLazySingleton<NotificationRepository>(
     () => NotificationRepositoryImpl(datasource: sl<NotificationDatasource>()),
   );
+
   sl.registerLazySingleton(() => InitNotifications(sl<NotificationRepository>()));
   sl.registerLazySingleton(() => GetMyNotifications(sl<NotificationRepository>()));
   sl.registerLazySingleton(() => MarkNotificationRead(sl<NotificationRepository>()));
@@ -182,158 +220,175 @@ Future<void> initDependencies() async {
       repository: sl<NotificationRepository>(),
     ),
   );
-  sl.registerLazySingleton<SupabaseClient>(
-    () => Supabase.instance.client,
-  );
 
   // ============================================
   // AUTH FEATURE
   // ============================================
-  sl.registerFactory(
-    () => AuthBloc(
-      registerUser: sl(),
-      loginUser: sl(),
-      logoutUser: sl(),
-      getCurrentUser: sl(),
-      authRepository: sl(),
-    ),
+  sl.registerLazySingleton<AuthDatasource>(
+    () => AuthDatasourceImpl(client: sl<SupabaseClient>()),
   );
-
-  sl.registerLazySingleton(() => RegisterUser(sl()));
-  sl.registerLazySingleton(() => LoginUser(sl()));
-  sl.registerLazySingleton(() => LogoutUser(sl()));
-  sl.registerLazySingleton(() => GetCurrentUser(sl()));
 
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(datasource: sl()),
+    () => AuthRepositoryImpl(supabaseClient: sl<SupabaseClient>()),
   );
 
-  sl.registerLazySingleton<AuthDatasource>(
-    () => AuthDatasourceImpl(client: sl()),
+  sl.registerLazySingleton(() => RegisterUser(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => LoginUser(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => LogoutUser(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => GetCurrentUser(sl<AuthRepository>()));
+
+  sl.registerFactory(
+    () => AuthBloc(
+      registerUser: sl<RegisterUser>(),
+      loginUser: sl<LoginUser>(),
+      logoutUser: sl<LogoutUser>(),
+      getCurrentUser: sl<GetCurrentUser>(),
+      authRepository: sl<AuthRepository>(),
+    ),
   );
 
   // ============================================
   // PROFILE FEATURE
   // ============================================
-  sl.registerFactory(
-    () => ProfileBloc(
-      getProfile: sl(),
-      updateProfile: sl(),
-      uploadProfilePhoto: sl(),
-    ),
+  sl.registerLazySingleton<ProfileDatasource>(
+    () => ProfileDatasourceImpl(client: sl<SupabaseClient>()),
   );
-
-  sl.registerLazySingleton(() => GetProfile(sl()));
-  sl.registerLazySingleton(() => UpdateProfile(sl()));
-  sl.registerLazySingleton(() => UploadProfilePhoto(sl()));
 
   sl.registerLazySingleton<ProfileRepository>(
-    () => ProfileRepositoryImpl(datasource: sl()),
+    () => ProfileRepositoryImpl(datasource: sl<ProfileDatasource>()),
   );
 
-  sl.registerLazySingleton<ProfileDatasource>(
-    () => ProfileDatasourceImpl(client: sl()),
+  sl.registerLazySingleton(() => GetProfile(sl<ProfileRepository>()));
+  sl.registerLazySingleton(() => UpdateProfile(sl<ProfileRepository>()));
+  sl.registerLazySingleton(() => UploadProfilePhoto(sl<ProfileRepository>()));
+
+  sl.registerFactory(
+    () => ProfileBloc(
+      getProfile: sl<GetProfile>(),
+      updateProfile: sl<UpdateProfile>(),
+      uploadProfilePhoto: sl<UploadProfilePhoto>(),
+    ),
   );
 
   // ============================================
   // COMPATIBILITY FEATURE
   // ============================================
-  sl.registerFactory(
-    () => CompatibilityBloc(
-      getUserHabits: sl(),
-      saveQuestionnaire: sl(),
-      calculateCompatibility: sl(),
-    ),
+  sl.registerLazySingleton<QuestionnaireDatasource>(
+    () => QuestionnaireDatasourceImpl(client: sl<SupabaseClient>()),
   );
-
-  sl.registerLazySingleton(() => GetUserHabits(sl()));
-  sl.registerLazySingleton(() => SaveQuestionnaire(sl()));
-  sl.registerLazySingleton(() => CalculateCompatibility(sl()));
 
   sl.registerLazySingleton<CompatibilityRepository>(
-    () => CompatibilityRepositoryImpl(datasource: sl()),
+    () => CompatibilityRepositoryImpl(datasource: sl<QuestionnaireDatasource>()),
   );
 
-  sl.registerLazySingleton<QuestionnaireDatasource>(
-    () => QuestionnaireDatasourceImpl(client: sl()),
+  sl.registerLazySingleton(() => GetUserHabits(sl<CompatibilityRepository>()));
+  sl.registerLazySingleton(() => SaveQuestionnaire(sl<CompatibilityRepository>()));
+  sl.registerLazySingleton(() => CalculateCompatibility(sl<CompatibilityRepository>()));
+
+  sl.registerFactory(
+    () => CompatibilityBloc(
+      getUserHabits: sl<GetUserHabits>(),
+      saveQuestionnaire: sl<SaveQuestionnaire>(),
+      calculateCompatibility: sl<CalculateCompatibility>(),
+    ),
   );
 
   // ============================================
   // LISTINGS FEATURE
   // ============================================
-  sl.registerFactory(
-    () => ListingBloc(
-      getListings: sl(),
-      createListing: sl(),
-      updateListing: sl(),
-      deleteListing: sl(),
-      searchListings: sl(),
-    ),
+  sl.registerLazySingleton<ListingDatasource>(
+    () => ListingDatasourceImpl(client: sl<SupabaseClient>()),
   );
-
-  sl.registerLazySingleton(() => GetListings(sl()));
-  sl.registerLazySingleton(() => CreateListing(sl()));
-  sl.registerLazySingleton(() => UpdateListing(sl()));
-  sl.registerLazySingleton(() => DeleteListing(sl()));
-  sl.registerLazySingleton(() => SearchListings(sl()));
 
   sl.registerLazySingleton<ListingRepository>(
-    () => ListingRepositoryImpl(datasource: sl()),
+    () => ListingRepositoryImpl(datasource: sl<ListingDatasource>()),
   );
 
-  sl.registerLazySingleton<ListingDatasource>(
-    () => ListingDatasourceImpl(client: sl()),
+  sl.registerLazySingleton(() => GetListings(sl<ListingRepository>()));
+  sl.registerLazySingleton(() => CreateListing(sl<ListingRepository>()));
+  sl.registerLazySingleton(() => UpdateListing(sl<ListingRepository>()));
+  sl.registerLazySingleton(() => DeleteListing(sl<ListingRepository>()));
+  sl.registerLazySingleton(() => SearchListings(sl<ListingRepository>()));
+
+  sl.registerFactory(
+    () => ListingBloc(
+      getListings: sl<GetListings>(),
+      createListing: sl<CreateListing>(),
+      updateListing: sl<UpdateListing>(),
+      deleteListing: sl<DeleteListing>(),
+      searchListings: sl<SearchListings>(),
+    ),
   );
 
   // ============================================
   // CHAT FEATURE
   // ============================================
+  sl.registerLazySingleton<ChatDatasource>(
+    () => ChatDatasourceImpl(client: sl<SupabaseClient>()),
+  );
+
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(datasource: sl<ChatDatasource>()),
+  );
+
+  sl.registerLazySingleton(() => GetChatRooms(sl<ChatRepository>()));
+  sl.registerLazySingleton(() => GetMessages(sl<ChatRepository>()));
+  sl.registerLazySingleton(() => SendMessage(sl<ChatRepository>()));
+  sl.registerLazySingleton(() => ListenToMessages(sl<ChatRepository>()));
+  sl.registerLazySingleton(() => MarkAsRead(sl<ChatRepository>()));
+
   sl.registerFactory(
     () => ChatBloc(
-      getChatRooms: sl(),
-      getMessages: sl(),
-      sendMessage: sl(),
-      listenToMessages: sl(),
-      markAsRead: sl(),
+      getChatRooms: sl<GetChatRooms>(),
+      getMessages: sl<GetMessages>(),
+      sendMessage: sl<SendMessage>(),
+      listenToMessages: sl<ListenToMessages>(),
+      markAsRead: sl<MarkAsRead>(),
     ),
   );
 
-  sl.registerLazySingleton(() => GetChatRooms(sl()));
-  sl.registerLazySingleton(() => GetMessages(sl()));
-  sl.registerLazySingleton(() => SendMessage(sl()));
-  sl.registerLazySingleton(() => ListenToMessages(sl()));
-  sl.registerLazySingleton(() => MarkAsRead(sl()));
-
-  sl.registerLazySingleton<ChatRepository>(
-    () => ChatRepositoryImpl(datasource: sl()),
+  // ============================================
+  // VISITS FEATURE
+  // ============================================
+  sl.registerLazySingleton<VisitDatasource>(
+    () => VisitDatasourceImpl(client: sl<SupabaseClient>()),
   );
 
-  sl.registerLazySingleton<ChatDatasource>(
-    () => ChatDatasourceImpl(client: sl()),
+  sl.registerLazySingleton<VisitRepository>(
+    () => VisitRepositoryImpl(datasource: sl<VisitDatasource>()),
   );
+
+  sl.registerLazySingleton(() => GetVisits(sl<VisitRepository>()));
+  sl.registerLazySingleton(() => ScheduleVisit(sl<VisitRepository>()));
+  sl.registerLazySingleton(() => ConfirmVisit(sl<VisitRepository>()));
+  sl.registerLazySingleton(() => CancelVisit(sl<VisitRepository>()));
+  sl.registerLazySingleton(() => CompleteVisit(sl<VisitRepository>()));
 
   sl.registerFactory(
     () => VisitBloc(
-      getVisits: sl(),
-      scheduleVisit: sl(),
-      confirmVisit: sl(),
-      cancelVisit: sl(),
-      completeVisit: sl(),
+      getVisits: sl<GetVisits>(),
+      scheduleVisit: sl<ScheduleVisit>(),
+      confirmVisit: sl<ConfirmVisit>(),
+      cancelVisit: sl<CancelVisit>(),
+      completeVisit: sl<CompleteVisit>(),
     ),
   );
 
-  sl.registerLazySingleton(() => GetVisits(sl()));
-  sl.registerLazySingleton(() => ScheduleVisit(sl()));
-  sl.registerLazySingleton(() => ConfirmVisit(sl()));
-  sl.registerLazySingleton(() => CancelVisit(sl()));
-  sl.registerLazySingleton(() => CompleteVisit(sl()));
-
-  sl.registerLazySingleton<VisitRepository>(
-    () => VisitRepositoryImpl(datasource: sl()),
+  // ============================================
+  // TENANT FEATURE (ACTIVIDAD 1)
+  // ============================================
+  sl.registerLazySingleton<TenantDataSource>(
+    () => TenantDataSourceImpl(supabaseClient: sl<SupabaseClient>()),
   );
 
-  sl.registerLazySingleton<VisitDatasource>(
-    () => VisitDatasourceImpl(client: sl()),
+  sl.registerLazySingleton<TenantRepository>(
+    () => TenantRepositoryImpl(dataSource: sl<TenantDataSource>()),
   );
 
+  sl.registerFactory<TenantCubit>(
+    () => TenantCubit(
+      repository: sl<TenantRepository>(),
+      analyticsService: sl<AnalyticsService>(),
+    ),
+  );
 }

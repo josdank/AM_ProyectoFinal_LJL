@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import '../../domain/entities/favorite.dart';
 
 class FavoriteModel extends Favorite {
@@ -10,10 +11,26 @@ class FavoriteModel extends Favorite {
 
   factory FavoriteModel.fromJson(Map<String, dynamic> json) {
     return FavoriteModel(
-      id: json['id'].toString(),
-      userId: json['user_id'].toString(),
-      listingId: json['listing_id'].toString(),
-      createdAt: DateTime.parse(json['created_at'].toString()),
+      id: json['id'] as String,
+      userId: json['user_id'] as String,
+      listingId: json['listing_id'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'listing_id': listingId,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
+
+  Favorite toEntity() => Favorite(
+    id: id,
+    userId: userId,
+    listingId: listingId,
+    createdAt: createdAt,
+  );
 }
