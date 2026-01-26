@@ -38,8 +38,8 @@ class _MapViewContent extends StatefulWidget {
 class _MapViewContentState extends State<_MapViewContent> {
   double _currentRadius = 5000;
   bool _showPlaces = true;
-  bool _showUserProperties = true; // NUEVO
-  bool _showListings = true; // NUEVO
+  bool _showUserProperties = true;
+  bool _showListings = true;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +47,6 @@ class _MapViewContentState extends State<_MapViewContent> {
       appBar: AppBar(
         title: const Text('Mapa de Viviendas'),
         actions: [
-          // Toggle para User Properties
           IconButton(
             icon: Icon(_showUserProperties ? Icons.home : Icons.home_outlined),
             onPressed: () {
@@ -57,7 +56,6 @@ class _MapViewContentState extends State<_MapViewContent> {
                 ? 'Ocultar propiedades de usuarios'
                 : 'Mostrar propiedades de usuarios',
           ),
-          // Toggle para Listings
           IconButton(
             icon: Icon(_showListings ? Icons.business : Icons.business_outlined),
             onPressed: () {
@@ -67,7 +65,6 @@ class _MapViewContentState extends State<_MapViewContent> {
                 ? 'Ocultar listings'
                 : 'Mostrar listings',
           ),
-          // Toggle para lugares
           IconButton(
             icon: Icon(_showPlaces ? Icons.location_on : Icons.location_off),
             onPressed: () {
@@ -75,7 +72,6 @@ class _MapViewContentState extends State<_MapViewContent> {
             },
             tooltip: _showPlaces ? 'Ocultar lugares' : 'Mostrar lugares',
           ),
-          // Selector de radio
           PopupMenuButton<double>(
             icon: const Icon(Icons.tune),
             tooltip: 'Ajustar radio de búsqueda',
@@ -88,6 +84,7 @@ class _MapViewContentState extends State<_MapViewContent> {
               const PopupMenuItem(value: 3000, child: Text('3 km')),
               const PopupMenuItem(value: 5000, child: Text('5 km')),
               const PopupMenuItem(value: 10000, child: Text('10 km')),
+              const PopupMenuItem(value: 50000, child: Text('50 km')),
             ],
           ),
         ],
@@ -105,10 +102,13 @@ class _MapViewContentState extends State<_MapViewContent> {
                 children: [
                   const Icon(Icons.error_outline, size: 64, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text(
-                    mapState.message,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      mapState.message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16),
+                    ),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -127,19 +127,15 @@ class _MapViewContentState extends State<_MapViewContent> {
             return const SizedBox.shrink();
           }
 
-          // Buscar propiedades al cargar
-          if (mapState.userProperties.isEmpty) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
+          // 🔥 BUSCAR PROPIEDADES AL CARGAR
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mapState.userProperties.isEmpty && mounted) {
               _searchNearbyProperties(_currentRadius);
-            });
-          }
+            }
+          });
 
           return BlocBuilder<ListingBloc, ListingState>(
             builder: (context, listingState) {
-              if (listingState is! ListingsLoaded) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
               return Stack(
                 children: [
                   // Mapa
@@ -252,24 +248,39 @@ class _MapViewContentState extends State<_MapViewContent> {
           );
         },
       ),
-      floatingActionButton: BlocBuilder<MapBloc, MapState>(
-        builder: (context, state) {
-          if (state is MapLoaded && _showPlaces && state.nearbyPlaces.isEmpty) {
-            return FloatingActionButton.extended(
-              onPressed: () {
-                context.read<MapBloc>().add(
-                      MapSearchNearbyPlacesRequested(
-                        center: state.userLocation,
-                        radiusMeters: _currentRadius,
-                      ),
-                    );
-              },
-              icon: const Icon(Icons.search),
-              label: const Text('Buscar lugares'),
-            );
-          }
-          return const SizedBox.shrink();
-        },
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Botón para buscar propiedades
+          FloatingActionButton(
+            heroTag: 'search_properties',
+            onPressed: () => _searchNearbyProperties(_currentRadius),
+            child: const Icon(Icons.refresh),
+            tooltip: 'Buscar propiedades cercanas',
+          ),
+          const SizedBox(height: 12),
+          // Botón para buscar lugares
+          BlocBuilder<MapBloc, MapState>(
+            builder: (context, state) {
+              if (state is MapLoaded && _showPlaces && state.nearbyPlaces.isEmpty) {
+                return FloatingActionButton.extended(
+                  heroTag: 'search_places',
+                  onPressed: () {
+                    context.read<MapBloc>().add(
+                          MapSearchNearbyPlacesRequested(
+                            center: state.userLocation,
+                            radiusMeters: _currentRadius,
+                          ),
+                        );
+                  },
+                  icon: const Icon(Icons.search),
+                  label: const Text('Buscar lugares'),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
       ),
     );
   }
@@ -279,10 +290,16 @@ class _MapViewContentState extends State<_MapViewContent> {
     final state = mapBloc.state;
 
     if (state is MapLoaded) {
+      // 🔥 BUSCAR USER PROPERTIES
       mapBloc.add(MapSearchNearbyUserPropertiesRequested(
         center: state.userLocation,
         radiusMeters: radius,
+        limit: 100,
       ));
+      
+      // 🔥 TAMBIÉN BUSCAR LISTINGS
+      final listingBloc = context.read<ListingBloc>();
+      listingBloc.add(const ListingsLoadRequested());
     }
   }
 

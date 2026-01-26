@@ -245,10 +245,8 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
   ) async {
     if (kDebugMode) print('🔵 AddReference iniciado');
     
-    emit(state.copyWith(
-      isActionLoading: true,
-      clearError: true,
-    ));
+    // 🔥 NO emitir isActionLoading aquí, mantener el estado actual
+    final currentState = state;
     
     final res = await addReference(AddReferenceParams(
       userId: event.userId,
@@ -261,11 +259,30 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     ));
     
     res.fold(
-      (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
-      (_) {
-        if (kDebugMode) print('🔵 AddReference exitoso, recargando...');
-        emit(state.copyWith(isActionLoading: false));
-        add(SecurityLoadRequested(userId: event.userId));
+      (l) {
+        if (kDebugMode) print('❌ AddReference falló: ${l.message}');
+        emit(currentState.copyWith(
+          isActionLoading: false,
+          error: l.message,
+        ));
+      },
+      (newReference) {
+        if (kDebugMode) print('✅ AddReference exitoso');
+        
+        // 🔥 ACTUALIZAR DIRECTAMENTE EL ESTADO con la nueva referencia
+        final updatedReferences = List<Reference>.from(currentState.references)
+          ..add(newReference);
+        
+        final verifiedCount = updatedReferences.where((r) => r.verified).length;
+        
+        emit(currentState.copyWith(
+          isActionLoading: false,
+          references: updatedReferences,
+          verifiedCount: verifiedCount,
+          clearError: true,
+        ));
+        
+        if (kDebugMode) print('📊 Referencias actualizadas: ${updatedReferences.length}');
       },
     );
   }
@@ -276,21 +293,29 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
   ) async {
     if (kDebugMode) print('🔵 UpdateReference iniciado');
     
-    emit(state.copyWith(
-      isActionLoading: true,
-      clearError: true,
-    ));
+    final currentState = state;
     
     final res = await updateReference(
       UpdateReferenceParams(reference: event.reference),
     );
     
     res.fold(
-      (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
-      (_) {
-        if (kDebugMode) print('🔵 UpdateReference exitoso, recargando...');
-        emit(state.copyWith(isActionLoading: false));
-        add(SecurityLoadRequested(userId: event.userId));
+      (l) => emit(currentState.copyWith(isActionLoading: false, error: l.message)),
+      (updatedRef) {
+        if (kDebugMode) print('✅ UpdateReference exitoso');
+        
+        final updatedReferences = currentState.references.map((ref) {
+          return ref.id == updatedRef.id ? updatedRef : ref;
+        }).toList();
+        
+        final verifiedCount = updatedReferences.where((r) => r.verified).length;
+        
+        emit(currentState.copyWith(
+          isActionLoading: false,
+          references: updatedReferences,
+          verifiedCount: verifiedCount,
+          clearError: true,
+        ));
       },
     );
   }
@@ -301,21 +326,29 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
   ) async {
     if (kDebugMode) print('🔵 DeleteReference iniciado');
     
-    emit(state.copyWith(
-      isActionLoading: true,
-      clearError: true,
-    ));
+    final currentState = state;
     
     final res = await deleteReference(
       DeleteReferenceParams(referenceId: event.referenceId),
     );
     
     res.fold(
-      (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
+      (l) => emit(currentState.copyWith(isActionLoading: false, error: l.message)),
       (_) {
-        if (kDebugMode) print('🔵 DeleteReference exitoso, recargando...');
-        emit(state.copyWith(isActionLoading: false));
-        add(SecurityLoadRequested(userId: event.userId));
+        if (kDebugMode) print('✅ DeleteReference exitoso');
+        
+        final updatedReferences = currentState.references
+            .where((ref) => ref.id != event.referenceId)
+            .toList();
+        
+        final verifiedCount = updatedReferences.where((r) => r.verified).length;
+        
+        emit(currentState.copyWith(
+          isActionLoading: false,
+          references: updatedReferences,
+          verifiedCount: verifiedCount,
+          clearError: true,
+        ));
       },
     );
   }
