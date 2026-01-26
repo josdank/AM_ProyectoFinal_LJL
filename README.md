@@ -248,13 +248,6 @@ Texto: #212121
 ### **Canales de Soporte**
 - 📧 **Email:** soporte@ljlroommates.com
 - 🐛 **Issues:** [GitHub Issues](https://github.com/tuusuario/LJL-Roommates/issues)
-- 💬 **Discord:** [Comunidad Discord](https://discord.gg/ljlroommates)
-- 📱 **WhatsApp:** +1 234 567 8900
-
-### **Horarios de Atención**
-- 🕐 **Lunes a Viernes:** 9:00 - 18:00 (GMT-5)
-- 🕐 **Sábados:** 10:00 - 14:00 (GMT-5)
-- 📅 **Domingos:** Cerrado
 
 ---
 
@@ -286,10 +279,10 @@ a hacer lo mismo, sujeto a las siguientes condiciones:
 - [Firebase](https://firebase.google.com) - Analytics y monitoreo
 
 ### **Contribuidores**
-- **Desarrollo:** [Tu Nombre]
-- **Diseño UI/UX:** [Diseñador]
-- **Testing:** [Testers]
-- **Documentación:** [Documentadores]
+- **Desarrollo:** [Lenin Proaño]
+- **Diseño UI/UX:** [Josué Guerra]
+- **Testing:** [Lenin Proaño, Josué Guerra]
+- **Documentación:** [Luis Ramos]
 
 ---
 
@@ -314,18 +307,6 @@ a hacer lo mismo, sujeto a las siguientes condiciones:
 - [ ] Versión web
 - [ ] Internacionalización
 - [ ] Machine learning para matches
-
----
-
-## 📱 **Screenshots**
-
-| Login Screen | Dashboard | Property Search |
-|--------------|-----------|-----------------|
-| ![Login](https://via.placeholder.com/300x600/2196F3/FFFFFF?text=Login) | ![Dashboard](https://via.placeholder.com/300x600/4CAF50/FFFFFF?text=Dashboard) | ![Search](https://via.placeholder.com/300x600/FF9800/FFFFFF?text=Search) |
-
-| Chat | Profile | Map View |
-|------|---------|----------|
-| ![Chat](https://via.placeholder.com/300x600/9C27B0/FFFFFF?text=Chat) | ![Profile](https://via.placeholder.com/300x600/00BCD4/FFFFFF?text=Profile) | ![Map](https://via.placeholder.com/300x600/8BC34A/FFFFFF?text=Map) |
 
 ---
 
@@ -362,15 +343,10 @@ a hacer lo mismo, sujeto a las siguientes condiciones:
 
 ---
 
-> **Nota:** Este README se actualiza regularmente. Última actualización: Marzo 2024
+> **Nota:** Este README se actualiza regularmente. Última actualización: Enero 2026
 
 ---
 <div align="center">
   
 **Hecho con ❤️ para la comunidad de roommates**
-
-[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/ljlroommates)
-[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/ljlroommates)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/company/ljlroommates)
-
 </div>
