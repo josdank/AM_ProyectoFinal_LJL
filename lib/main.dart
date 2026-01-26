@@ -32,6 +32,8 @@ import 'features/notifications/presentation/pages/notifications_page.dart';
 
 import 'features/home/presentation/pages/home_dashboard_page.dart';
 
+import 'features/user_properties/presentation/pages/my_properties_page.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -101,11 +103,7 @@ class MyApp extends StatelessWidget {
     }
 
     return MultiBlocProvider(
-      providers: [
-        BlocProvider<AuthBloc>(
-          create: (_) => di.sl<AuthBloc>(),
-        ),
-      ],
+      providers: [BlocProvider<AuthBloc>(create: (_) => di.sl<AuthBloc>())],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: buildLjlTheme().copyWith(
@@ -169,10 +167,7 @@ class _HomeShell extends StatelessWidget {
   final String userId;
   final String email;
 
-  const _HomeShell({
-    required this.userId,
-    required this.email,
-  });
+  const _HomeShell({required this.userId, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -183,16 +178,18 @@ class _HomeShell extends StatelessWidget {
               di.sl<ProfileBloc>()..add(ProfileLoadRequested(userId: userId)),
         ),
         BlocProvider<ConnectionBloc>(
-          create: (_) => di.sl<ConnectionBloc>()
-            ..add(ConnectionLoadRequested(userId: userId)),
+          create: (_) =>
+              di.sl<ConnectionBloc>()
+                ..add(ConnectionLoadRequested(userId: userId)),
         ),
         BlocProvider<SecurityBloc>(
           create: (_) =>
               di.sl<SecurityBloc>()..add(SecurityLoadRequested(userId: userId)),
         ),
         BlocProvider<NotificationBloc>(
-          create: (_) => di.sl<NotificationBloc>()
-            ..add(NotificationStarted(userId: userId)),
+          create: (_) =>
+              di.sl<NotificationBloc>()
+                ..add(NotificationStarted(userId: userId)),
         ),
       ],
       child: _HomePageContent(email: email, userId: userId),
@@ -204,10 +201,7 @@ class _HomePageContent extends StatelessWidget {
   final String email;
   final String userId;
 
-  const _HomePageContent({
-    required this.email,
-    required this.userId,
-  });
+  const _HomePageContent({required this.email, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -264,8 +258,11 @@ class _HomePageContent extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 40),
-                      const Icon(Icons.error_outline,
-                          size: 64, color: Colors.red),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
                       const SizedBox(height: 16),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -280,14 +277,16 @@ class _HomePageContent extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
-                        onPressed: () => context
-                            .read<ProfileBloc>()
-                            .add(ProfileLoadRequested(userId: userId)),
+                        onPressed: () => context.read<ProfileBloc>().add(
+                          ProfileLoadRequested(userId: userId),
+                        ),
                         icon: const Icon(Icons.refresh),
                         label: const Text('Reintentar'),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -307,6 +306,7 @@ class _HomePageContent extends StatelessWidget {
                 onSecurity: () => _navigateToSecurity(context),
                 onNotifications: () => _navigateToNotifications(context),
                 onMap: () => _navigateToMap(context),
+                onMyProperties: () => _navigateToMyProperties(context), // NUEVO
               );
             }
 
@@ -332,7 +332,8 @@ class _HomePageContent extends StatelessWidget {
           icon: Icon(icon),
           tooltip: tooltip,
           onPressed: onPressed,
-          padding: EdgeInsets.zero, // Padding interno cero, controlado por SizedBox
+          padding:
+              EdgeInsets.zero, // Padding interno cero, controlado por SizedBox
           iconSize: 22,
         ),
       ),
@@ -342,9 +343,7 @@ class _HomePageContent extends StatelessWidget {
   void _navigateToMap(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const MapViewPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const MapViewPage()),
     );
   }
 
@@ -353,12 +352,8 @@ class _HomePageContent extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => MultiBlocProvider(
           providers: [
-            BlocProvider.value(
-              value: context.read<ProfileBloc>(),
-            ),
-            BlocProvider.value(
-              value: context.read<SecurityBloc>(),
-            ),
+            BlocProvider.value(value: context.read<ProfileBloc>()),
+            BlocProvider.value(value: context.read<SecurityBloc>()),
           ],
           child: const ProfilePage(),
         ),
@@ -427,21 +422,25 @@ class _HomePageContent extends StatelessWidget {
     );
   }
 
+  // NUEVO: Método para navegar a Mis Propiedades
+  void _navigateToMyProperties(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MyPropertiesPage()),
+    );
+  }
+
   void _navigateToChat(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const ChatListPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const ChatListPage()),
     );
   }
 
   void _navigateToVisits(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const MyVisitsPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const MyVisitsPage()),
     );
   }
 
@@ -449,9 +448,7 @@ class _HomePageContent extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -461,19 +458,13 @@ class _HomePageContent extends StatelessWidget {
               const SizedBox(height: 16),
               const Text(
                 'Cerrar Sesión',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               const Text(
                 '¿Estás seguro que deseas cerrar sesión?',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 24),
               Row(
@@ -495,9 +486,9 @@ class _HomePageContent extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.of(dialogContext).pop();
-                        context
-                            .read<AuthBloc>()
-                            .add(const AuthLogoutRequested());
+                        context.read<AuthBloc>().add(
+                          const AuthLogoutRequested(),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,

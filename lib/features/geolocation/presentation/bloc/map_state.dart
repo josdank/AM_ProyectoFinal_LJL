@@ -1,3 +1,7 @@
+// ============================================
+// STATES - ACTUALIZADO
+// ============================================
+
 part of 'map_bloc.dart';
 
 abstract class MapState extends Equatable {
@@ -19,6 +23,7 @@ class MapLoaded extends MapState {
   final LocationPoint userLocation;
   final List<Place> nearbyPlaces;
   final List<Listing> filteredListings;
+  final List<UserProperty> userProperties; // NUEVO
   final double currentRadius;
   final bool isSearching;
   final String? searchError;
@@ -27,7 +32,8 @@ class MapLoaded extends MapState {
     required this.userLocation,
     this.nearbyPlaces = const [],
     this.filteredListings = const [],
-    this.currentRadius = 5000, // 5 km por defecto
+    this.userProperties = const [], // NUEVO
+    this.currentRadius = 5000,
     this.isSearching = false,
     this.searchError,
   });
@@ -36,6 +42,7 @@ class MapLoaded extends MapState {
     LocationPoint? userLocation,
     List<Place>? nearbyPlaces,
     List<Listing>? filteredListings,
+    List<UserProperty>? userProperties, // NUEVO
     double? currentRadius,
     bool? isSearching,
     String? searchError,
@@ -44,6 +51,7 @@ class MapLoaded extends MapState {
       userLocation: userLocation ?? this.userLocation,
       nearbyPlaces: nearbyPlaces ?? this.nearbyPlaces,
       filteredListings: filteredListings ?? this.filteredListings,
+      userProperties: userProperties ?? this.userProperties, // NUEVO
       currentRadius: currentRadius ?? this.currentRadius,
       isSearching: isSearching ?? this.isSearching,
       searchError: searchError,
@@ -55,6 +63,7 @@ class MapLoaded extends MapState {
         userLocation,
         nearbyPlaces,
         filteredListings,
+        userProperties, // NUEVO
         currentRadius,
         isSearching,
         searchError,

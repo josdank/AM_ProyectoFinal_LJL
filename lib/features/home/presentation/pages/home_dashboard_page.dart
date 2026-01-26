@@ -11,7 +11,8 @@ class HomeDashboardPage extends StatelessWidget {
   final VoidCallback onMatches;
   final VoidCallback onSecurity;
   final VoidCallback onNotifications;
-  final VoidCallback onMap; // NUEVO
+  final VoidCallback onMap;
+  final VoidCallback onMyProperties; // NUEVO
 
   const HomeDashboardPage({
     super.key,
@@ -24,6 +25,7 @@ class HomeDashboardPage extends StatelessWidget {
     required this.onSecurity,
     required this.onNotifications,
     required this.onMap, // NUEVO
+    required this.onMyProperties, // NUEVO
   });
 
   @override
@@ -36,14 +38,16 @@ class HomeDashboardPage extends StatelessWidget {
           _BrandHero(email: email, isProfileComplete: isProfileComplete),
           const SizedBox(height: 14),
 
-          // NUEVO: Fila de botones principales con Mapa
+          // Fila de botones principales
           Row(
             children: [
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: onProfile,
                   icon: const Icon(Icons.person),
-                  label: Text(isProfileComplete ? 'Ver perfil' : 'Completar perfil'),
+                  label: Text(
+                    isProfileComplete ? 'Ver perfil' : 'Completar perfil',
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -57,22 +61,40 @@ class HomeDashboardPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          // Botón de Mapa a ancho completo
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: onMap,
-              icon: const Icon(Icons.map),
-              label: const Text('Ver Mapa de Viviendas'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: LjlColors.teal,
-                foregroundColor: Colors.white,
+          // NUEVO: Botón de Mis Propiedades y Mapa
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: onMap,
+                  icon: const Icon(Icons.map),
+                  label: const Text('Ver Mapa'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: LjlColors.teal,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: onMyProperties, // NUEVO
+                  icon: const Icon(Icons.home),
+                  label: const Text('Mis Propiedades'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: LjlColors.gold,
+                    foregroundColor: LjlColors.navy,
+                  ),
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 18),
-          Text('Funciones clave', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Funciones clave',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 10),
 
           GridView.count(
@@ -132,9 +154,9 @@ class HomeDashboardPage extends StatelessWidget {
                     child: Text(
                       'Completa tu perfil para aumentar la confianza y mejorar tus matches.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: LjlColors.navy.withOpacity(.92),
-                            fontWeight: FontWeight.w800,
-                          ),
+                        color: LjlColors.navy.withOpacity(.92),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ],
@@ -150,10 +172,7 @@ class _BrandHero extends StatelessWidget {
   final String email;
   final bool isProfileComplete;
 
-  const _BrandHero({
-    required this.email,
-    required this.isProfileComplete,
-  });
+  const _BrandHero({required this.email, required this.isProfileComplete});
 
   @override
   Widget build(BuildContext context) {
@@ -163,17 +182,14 @@ class _BrandHero extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            LjlColors.navy,
-            LjlColors.navy.withOpacity(.92),
-          ],
+          colors: [LjlColors.navy, LjlColors.navy.withOpacity(.92)],
         ),
         boxShadow: [
           BoxShadow(
             blurRadius: 22,
             offset: const Offset(0, 10),
             color: Colors.black.withOpacity(.12),
-          )
+          ),
         ],
       ),
       child: Stack(
@@ -261,7 +277,7 @@ class _BrandHero extends StatelessWidget {
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -287,7 +303,11 @@ class _StatusPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+          ),
           const SizedBox(width: 8),
           Text(
             text,

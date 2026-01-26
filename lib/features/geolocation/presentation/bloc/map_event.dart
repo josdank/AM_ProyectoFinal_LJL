@@ -1,3 +1,7 @@
+// ============================================
+// EVENTS - ACTUALIZADO
+// ============================================
+
 part of 'map_bloc.dart';
 
 abstract class MapEvent extends Equatable {
@@ -7,12 +11,10 @@ abstract class MapEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Cargar ubicación actual del usuario
 class MapLoadRequested extends MapEvent {
   const MapLoadRequested();
 }
 
-/// Buscar lugares cercanos (universidades, transporte, etc.)
 class MapSearchNearbyPlacesRequested extends MapEvent {
   final LocationPoint center;
   final double radiusMeters;
@@ -28,7 +30,22 @@ class MapSearchNearbyPlacesRequested extends MapEvent {
   List<Object?> get props => [center, radiusMeters, type];
 }
 
-/// Filtrar listings por radio de distancia
+// NUEVO EVENTO
+class MapSearchNearbyUserPropertiesRequested extends MapEvent {
+  final LocationPoint center;
+  final double radiusMeters;
+  final int limit;
+
+  const MapSearchNearbyUserPropertiesRequested({
+    required this.center,
+    this.radiusMeters = 5000,
+    this.limit = 50,
+  });
+
+  @override
+  List<Object?> get props => [center, radiusMeters, limit];
+}
+
 class MapFilterListingsByRadius extends MapEvent {
   final List<Listing> listings;
   final double radiusMeters;
@@ -42,7 +59,6 @@ class MapFilterListingsByRadius extends MapEvent {
   List<Object?> get props => [listings, radiusMeters];
 }
 
-/// Actualizar ubicación del usuario en tiempo real
 class MapUpdateUserLocation extends MapEvent {
   final LocationPoint location;
 
@@ -51,3 +67,4 @@ class MapUpdateUserLocation extends MapEvent {
   @override
   List<Object?> get props => [location];
 }
+

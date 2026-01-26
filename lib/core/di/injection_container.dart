@@ -131,6 +131,18 @@ import '../../features/security/domain/usecases/delete_reference.dart';
 import '../../features/security/domain/usecases/send_verification_code.dart';
 import '../../features/security/domain/usecases/verify_reference.dart';
 
+import '../../features/user_properties/data/datasources/user_property_datasource.dart';
+import '../../features/user_properties/data/repositories/user_property_repository_impl.dart';
+import '../../features/user_properties/domain/repositories/user_property_repository.dart';
+import '../../features/user_properties/domain/usecases/create_property.dart';
+import '../../features/user_properties/domain/usecases/delete_property.dart';
+import '../../features/user_properties/domain/usecases/get_my_properties.dart';
+import '../../features/user_properties/domain/usecases/search_nearby_user_properties.dart';
+import '../../features/user_properties/domain/usecases/toggle_property_status.dart';
+import '../../features/user_properties/domain/usecases/update_property.dart';
+import '../../features/user_properties/domain/usecases/upload_property_images.dart';
+import '../../features/user_properties/presentation/bloc/user_property_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -424,8 +436,8 @@ Future<void> initDependencies() async {
     ),
   );
 
-    // ============================================
-  // GEOLOCATION FEATURE
+// ============================================
+  // GEOLOCATION FEATURE (ACTUALIZADO)
   // ============================================
   sl.registerLazySingleton<LocationDatasource>(
     () => LocationDatasourceImpl(client: sl<SupabaseClient>()),
@@ -439,10 +451,43 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => CalculateDistance(sl<GeolocationRepository>()));
   sl.registerLazySingleton(() => SearchNearbyPlaces(sl<GeolocationRepository>()));
 
+  // ACTUALIZADO: MapBloc ahora recibe SearchNearbyUserProperties
   sl.registerFactory(
     () => MapBloc(
       getCurrentLocation: sl<GetCurrentLocation>(),
       searchNearbyPlaces: sl<SearchNearbyPlaces>(),
+      searchNearbyUserProperties: sl<SearchNearbyUserProperties>(), // NUEVO
+    ),
+  );
+
+  // ============================================
+  // USER PROPERTIES FEATURE
+  // ============================================
+  sl.registerLazySingleton<UserPropertyDatasource>(
+    () => UserPropertyDatasourceImpl(client: sl<SupabaseClient>()),
+  );
+
+  sl.registerLazySingleton<UserPropertyRepository>(
+    () => UserPropertyRepositoryImpl(datasource: sl<UserPropertyDatasource>()),
+  );
+
+  sl.registerLazySingleton(() => GetMyProperties(sl<UserPropertyRepository>()));
+  sl.registerLazySingleton(() => CreateProperty(sl<UserPropertyRepository>()));
+  sl.registerLazySingleton(() => UpdateProperty(sl<UserPropertyRepository>()));
+  sl.registerLazySingleton(() => DeleteProperty(sl<UserPropertyRepository>()));
+  sl.registerLazySingleton(() => SearchNearbyUserProperties(sl<UserPropertyRepository>()));
+  sl.registerLazySingleton(() => UploadPropertyImages(sl<UserPropertyRepository>()));
+  sl.registerLazySingleton(() => TogglePropertyStatus(sl<UserPropertyRepository>()));
+
+  sl.registerFactory(
+    () => UserPropertyBloc(
+      getMyProperties: sl<GetMyProperties>(),
+      createProperty: sl<CreateProperty>(),
+      updateProperty: sl<UpdateProperty>(),
+      deleteProperty: sl<DeleteProperty>(),
+      searchNearby: sl<SearchNearbyUserProperties>(),
+      uploadImages: sl<UploadPropertyImages>(),
+      toggleStatus: sl<TogglePropertyStatus>(),
     ),
   );
 }

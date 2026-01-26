@@ -17,7 +17,7 @@ class AppRouter {
     redirect: (context, state) {
       final authBloc = context.read<AuthBloc>();
       final isAuthenticated = authBloc.state is AuthAuthenticated;
-      final location = state.uri.toString(); // AQUI ESTA EL CAMBIO 
+      final location = state.uri.toString(); // AQUI ESTA EL CAMBIO
 
       if (!isAuthenticated) {
         // Redirigir a login si no está autenticado
@@ -36,25 +36,19 @@ class AppRouter {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        redirect: (context, state) => '/login',
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
+      GoRoute(path: '/', redirect: (context, state) => '/login'),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),
       ),
       GoRoute(
-  path: '/home',
-  builder: (context, state) {
-    final authState = context.read<AuthBloc>().state as AuthAuthenticated;
-    final user = authState.user;
+        path: '/home',
+        builder: (context, state) {
+          final authState = context.read<AuthBloc>().state as AuthAuthenticated;
+          final user = authState.user;
 
-    return HomeDashboardPage(
+          return HomeDashboardPage(
             email: user.email,
             isProfileComplete: user.isProfileComplete,
             onProfile: () => context.go('/profile'),
@@ -74,6 +68,10 @@ class AppRouter {
             },
             onMap: () {
               context.go('/map'); // si tienes mapa
+            },
+            onMyProperties: () {
+              // Acción para "Mis propiedades"
+              debugPrint('My Properties');
             },
           );
         },
