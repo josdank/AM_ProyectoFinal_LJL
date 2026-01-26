@@ -243,14 +243,6 @@ Texto: #212121
 
 ---
 
-## 📞 **Soporte y Contacto**
-
-### **Canales de Soporte**
-- 📧 **Email:** soporte@ljlroommates.com
-- 🐛 **Issues:** [GitHub Issues](https://github.com/tuusuario/LJL-Roommates/issues)
-
----
-
 ## 📄 **Licencia**
 
 Este proyecto está bajo la **Licencia MIT**. Consulta el archivo [LICENSE](LICENSE) para más detalles.
