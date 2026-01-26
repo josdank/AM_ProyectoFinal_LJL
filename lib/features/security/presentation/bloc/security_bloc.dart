@@ -25,7 +25,6 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
   final ReportUser reportUser;
   final BlockUser blockUser;
   final GetBlockedUsers getBlockedUsers;
-  // NUEVO: Referencias
   final GetUserReferences getUserReferences;
   final AddReference addReference;
   final UpdateReference updateReference;
@@ -39,7 +38,6 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     required this.reportUser,
     required this.blockUser,
     required this.getBlockedUsers,
-    // NUEVO: Referencias
     required this.getUserReferences,
     required this.addReference,
     required this.updateReference,
@@ -51,7 +49,6 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     on<SecuritySubmitVerificationRequested>(_onSubmitVerification);
     on<SecurityReportUserRequested>(_onReport);
     on<SecurityBlockUserRequested>(_onBlock);
-    // NUEVO: Handlers para referencias
     on<SecurityAddReferenceRequested>(_onAddReference);
     on<SecurityUpdateReferenceRequested>(_onUpdateReference);
     on<SecurityDeleteReferenceRequested>(_onDeleteReference);
@@ -59,70 +56,136 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     on<SecurityVerifyReferenceRequested>(_onVerifyReference);
   }
 
-Future<void> _onLoad(SecurityLoadRequested event, Emitter<SecurityState> emit) async {
-    emit(state.copyWith(isLoading: true, error: null));
-    
-    final verRes = await getVerificationStatus(GetVerificationStatusParams(userId: event.userId));
-    final blockedRes = await getBlockedUsers(GetBlockedUsersParams(blockerId: event.userId));
-    final referencesRes = await getUserReferences(GetUserReferencesParams(userId: event.userId)); // NUEVO
+  // ✅ MÉTODO CORREGIDO: Sin nested folds
+  Future<void> _onLoad(
+    SecurityLoadRequested event,
+    Emitter<SecurityState> emit,
+  ) async {
+    // 🔥 IMPORTANTE: Evitar cargas múltiples simultáneas
+    if (state.isLoading) {
+      return;
+    }
 
-    verRes.fold(
-      (l) => emit(state.copyWith(isLoading: false, error: l.message)),
-      (verification) {
-        blockedRes.fold(
-          (l) => emit(state.copyWith(isLoading: false, error: l.message)),
-          (blocked) {
-            // NUEVO: Procesar referencias
-            referencesRes.fold(
-              (l) => emit(state.copyWith(isLoading: false, error: l.message)),
-              (references) => emit(
-                state.copyWith(
-                  isLoading: false,
-                  verification: verification,
-                  blockedUsers: blocked,
-                  references: references, // NUEVO
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
+    emit(state.copyWith(isLoading: true, error: null));
+
+    try {
+      // Cargar verificación
+      Verification? verification;
+      final verRes = await getVerificationStatus(
+        GetVerificationStatusParams(userId: event.userId),
+      );
+      verRes.fold(
+        (failure) {
+          // No es crítico si falla
+          verification = null;
+        },
+        (ver) => verification = ver,
+      );
+
+      // Cargar usuarios bloqueados
+      List<UserBlock> blockedUsers = [];
+      final blockedRes = await getBlockedUsers(
+        GetBlockedUsersParams(blockerId: event.userId),
+      );
+      blockedRes.fold(
+        (failure) {
+          // No es crítico si falla
+          blockedUsers = [];
+        },
+        (blocked) => blockedUsers = blocked,
+      );
+
+      // Cargar referencias
+      List<Reference> references = [];
+      final referencesRes = await getUserReferences(
+        GetUserReferencesParams(userId: event.userId),
+      );
+      referencesRes.fold(
+        (failure) {
+          // No es crítico si falla
+          references = [];
+        },
+        (refs) => references = refs,
+      );
+
+      // Calcular referencias verificadas
+      final verifiedCount = references.where((r) => r.verified).length;
+
+      // ✅ Emitir estado exitoso con toda la data
+      emit(state.copyWith(
+        isLoading: false,
+        verification: verification,
+        blockedUsers: blockedUsers,
+        references: references,
+        verifiedCount: verifiedCount,
+        error: null,
+      ));
+    } catch (e) {
+      // ✅ IMPORTANTE: Emitir error pero NO recargar automáticamente
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Error al cargar datos de seguridad: $e',
+      ));
+    }
   }
 
-  Future<void> _onSubmitVerification(SecuritySubmitVerificationRequested event, Emitter<SecurityState> emit) async {
+  Future<void> _onSubmitVerification(
+    SecuritySubmitVerificationRequested event,
+    Emitter<SecurityState> emit,
+  ) async {
     emit(state.copyWith(isActionLoading: true, error: null));
-    final res = await submitVerification(SubmitVerificationParams(userId: event.userId, type: event.type));
+    
+    final res = await submitVerification(
+      SubmitVerificationParams(userId: event.userId, type: event.type),
+    );
+    
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
       (v) => emit(state.copyWith(isActionLoading: false, verification: v)),
     );
   }
 
-  Future<void> _onReport(SecurityReportUserRequested event, Emitter<SecurityState> emit) async {
+  Future<void> _onReport(
+    SecurityReportUserRequested event,
+    Emitter<SecurityState> emit,
+  ) async {
     emit(state.copyWith(isActionLoading: true, error: null));
+    
     final res = await reportUser(ReportUserParams(
       reporterId: event.reporterId,
       reportedId: event.reportedId,
       reason: event.reason,
       details: event.details,
     ));
+    
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
       (_) => emit(state.copyWith(isActionLoading: false)),
     );
   }
 
-  Future<void> _onBlock(SecurityBlockUserRequested event, Emitter<SecurityState> emit) async {
+  Future<void> _onBlock(
+    SecurityBlockUserRequested event,
+    Emitter<SecurityState> emit,
+  ) async {
     emit(state.copyWith(isActionLoading: true, error: null));
-    final res = await blockUser(BlockUserParams(blockerId: event.blockerId, blockedId: event.blockedId));
+    
+    final res = await blockUser(
+      BlockUserParams(blockerId: event.blockerId, blockedId: event.blockedId),
+    );
+    
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
-      (_) => add(SecurityLoadRequested(userId: event.blockerId)),
+      (_) {
+        // ✅ Recargar después de bloquear exitosamente
+        emit(state.copyWith(isActionLoading: false));
+        add(SecurityLoadRequested(userId: event.blockerId));
+      },
     );
   }
 
   // ===== REFERENCIAS =====
+
   Future<void> _onAddReference(
     SecurityAddReferenceRequested event,
     Emitter<SecurityState> emit,
@@ -141,7 +204,10 @@ Future<void> _onLoad(SecurityLoadRequested event, Emitter<SecurityState> emit) a
     
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
-      (_) => add(SecurityLoadRequested(userId: event.userId)),
+      (_) {
+        emit(state.copyWith(isActionLoading: false));
+        add(SecurityLoadRequested(userId: event.userId));
+      },
     );
   }
 
@@ -151,11 +217,16 @@ Future<void> _onLoad(SecurityLoadRequested event, Emitter<SecurityState> emit) a
   ) async {
     emit(state.copyWith(isActionLoading: true, error: null));
     
-    final res = await updateReference(UpdateReferenceParams(reference: event.reference));
+    final res = await updateReference(
+      UpdateReferenceParams(reference: event.reference),
+    );
     
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
-      (_) => add(SecurityLoadRequested(userId: event.userId)),
+      (_) {
+        emit(state.copyWith(isActionLoading: false));
+        add(SecurityLoadRequested(userId: event.userId));
+      },
     );
   }
 
@@ -165,11 +236,16 @@ Future<void> _onLoad(SecurityLoadRequested event, Emitter<SecurityState> emit) a
   ) async {
     emit(state.copyWith(isActionLoading: true, error: null));
     
-    final res = await deleteReference(DeleteReferenceParams(referenceId: event.referenceId));
+    final res = await deleteReference(
+      DeleteReferenceParams(referenceId: event.referenceId),
+    );
     
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
-      (_) => add(SecurityLoadRequested(userId: event.userId)),
+      (_) {
+        emit(state.copyWith(isActionLoading: false));
+        add(SecurityLoadRequested(userId: event.userId));
+      },
     );
   }
 
@@ -187,7 +263,6 @@ Future<void> _onLoad(SecurityLoadRequested event, Emitter<SecurityState> emit) a
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
       (code) {
-        // Código enviado exitosamente
         emit(state.copyWith(
           isActionLoading: false,
           verificationCodeSent: true,
@@ -209,7 +284,10 @@ Future<void> _onLoad(SecurityLoadRequested event, Emitter<SecurityState> emit) a
     
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
-      (_) => add(SecurityLoadRequested(userId: event.userId)),
+      (_) {
+        emit(state.copyWith(isActionLoading: false));
+        add(SecurityLoadRequested(userId: event.userId));
+      },
     );
   }
 }

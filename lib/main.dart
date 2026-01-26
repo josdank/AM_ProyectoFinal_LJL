@@ -351,8 +351,15 @@ class _HomePageContent extends StatelessWidget {
   void _navigateToProfile(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<ProfileBloc>(),
+        builder: (_) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(
+              value: context.read<ProfileBloc>(),
+            ),
+            BlocProvider.value(
+              value: context.read<SecurityBloc>(),
+            ),
+          ],
           child: const ProfilePage(),
         ),
       ),

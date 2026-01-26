@@ -4,7 +4,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../models/user_model.dart';
 
-
 abstract class AuthDatasource {
   Future<UserModel> signUp({
     required String email,
@@ -20,9 +19,7 @@ abstract class AuthDatasource {
 
   Future<void> signOut();
   Future<UserModel?> getCurrentUser();
-
   Future<void> sendPasswordResetEmail(String email);
-
   Stream<UserModel?> get authStateChanges;
 }
 
@@ -41,6 +38,7 @@ class AuthDatasourceImpl implements AuthDatasource {
     required List<String> roles,
   }) async {
     try {
+      // 1. Crear usuario en auth.users
       final response = await _auth.signUp(
         email: email,
         password: password,
@@ -54,24 +52,15 @@ class AuthDatasourceImpl implements AuthDatasource {
         throw const AuthException(message: 'Error al crear cuenta');
       }
 
-      //Insertar/Upsert en tabla public.users para que quede persistente
-      // (Esto evita depender solo de user_metadata)
-      await client.from('users').upsert({
-        'id': response.user!.id,
-        'email': email,
-        'full_name': fullName,
-        'roles': roles,
-        'email_confirmed': response.user!.emailConfirmedAt != null,
-      });
+      // 2. ❌ ELIMINAR este bloque que causaba el error:
+      // await client.from('users').upsert({...});
+
+      // ✅ El trigger 'on_auth_user_created_users' se encarga automáticamente
+      // de crear el registro en public.users
 
       return UserModel.fromSupabaseUser(response.user!);
     } on sb.AuthApiException catch (e) {
       throw AuthException(message: _parseError(e.message), code: e.code);
-    } on sb.PostgrestException catch (e) {
-      throw ServerException(
-        message: e.message,
-        statusCode: _tryInt(e.code),
-      );
     } catch (e) {
       throw AuthException(message: 'Error inesperado: $e');
     }
@@ -115,16 +104,6 @@ class AuthDatasourceImpl implements AuthDatasource {
       final user = _auth.currentUser;
       if (user == null) return null;
 
-      //Traer roles reales desde public.users si existe
-      try {
-        final row = await client.from('users').select().eq('id', user.id).maybeSingle();
-        if (row != null) {
-          return UserModel.fromJson(Map<String, dynamic>.from(row));
-        }
-      } catch (_) {
-        // si falla, caemos a metadata
-      }
-
       return UserModel.fromSupabaseUser(user);
     } catch (e) {
       throw AuthException(message: 'Error al obtener usuario: $e');
@@ -145,22 +124,13 @@ class AuthDatasourceImpl implements AuthDatasource {
   }
 
   @override
-  Stream<UserModel?> get authStateChanges => _auth.onAuthStateChange.asyncMap((event) async {
+  Stream<UserModel?> get authStateChanges => 
+      _auth.onAuthStateChange.map((event) {
         final user = event.session?.user;
         if (user == null) return null;
-
-        //intentar traer desde public.users
-        try {
-          final row = await client.from('users').select().eq('id', user.id).maybeSingle();
-          if (row != null) {
-            return UserModel.fromJson(Map<String, dynamic>.from(row));
-          }
-        } catch (_) {}
-
         return UserModel.fromSupabaseUser(user);
       });
 
   String _parseError(String message) => message;
-
   int? _tryInt(String? s) => s == null ? null : int.tryParse(s);
 }

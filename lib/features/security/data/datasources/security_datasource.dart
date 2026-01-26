@@ -38,7 +38,8 @@ class SecurityDatasourceImpl implements SecurityDatasource {
 
   static const _verifications = 'verifications';
   static const _reports = 'reports';
-  static const _blocks = 'blocks';
+  static const _blocks = 'user_blocks'; // 🔥 CAMBIADO: 'blocks' → 'user_blocks'
+  static const _references = 'references';
 
   @override
   Future<VerificationModel?> getVerificationStatus({required String userId}) async {
@@ -58,7 +59,7 @@ class SecurityDatasourceImpl implements SecurityDatasource {
     try {
       final inserted = await client.from(_verifications).upsert({
         'user_id': userId,
-        'type': type,
+        'verification_type': type, // 🔥 CAMBIADO: 'type' → 'verification_type'
         'status': 'pending',
       }).select().single();
       return VerificationModel.fromJson(Map<String, dynamic>.from(inserted));
@@ -78,10 +79,10 @@ class SecurityDatasourceImpl implements SecurityDatasource {
   }) async {
     try {
       final inserted = await client.from(_reports).insert({
-        'reporter_id': reporterId,
-        'reported_id': reportedId,
-        'reason': reason,
-        'details': details,
+        'reporter': reporterId,     // 🔥 CAMBIADO: 'reporter_id' → 'reporter'
+        'reported': reportedId,     // 🔥 CAMBIADO: 'reported_id' → 'reported'
+        'category': reason,         // 🔥 CAMBIADO: 'reason' → 'category'
+        'description': details,     // 🔥 CAMBIADO: 'details' → 'description'
       }).select().single();
       return UserReportModel.fromJson(Map<String, dynamic>.from(inserted));
     } on PostgrestException catch (e) {
@@ -117,8 +118,8 @@ class SecurityDatasourceImpl implements SecurityDatasource {
       throw ServerException(message: e.toString());
     }
   }
+
   // ===== REFERENCIAS =====
-  static const _references = 'references';
 
   @override
   Future<List<ReferenceModel>> getUserReferences({required String userId}) async {
@@ -196,7 +197,6 @@ class SecurityDatasourceImpl implements SecurityDatasource {
         'send_verification_code',
         params: {
           'p_reference_id': referenceId,
-          'p_referee_email': refereeEmail,
         },
       );
       
@@ -237,8 +237,8 @@ class SecurityDatasourceImpl implements SecurityDatasource {
           .from(_references)
           .update({
             'verified': true,
+            'verified_at': DateTime.now().toIso8601String(), // 🔥 AGREGADO
             'verification_code': null,
-            'code_expires_at': null,
           })
           .eq('id', referenceId)
           .select()

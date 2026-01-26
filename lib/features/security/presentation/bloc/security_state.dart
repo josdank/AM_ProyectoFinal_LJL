@@ -6,8 +6,9 @@ class SecurityState extends Equatable {
   final String? error;
   final Verification? verification;
   final List<UserBlock> blockedUsers;
-  final List<Reference> references; // NUEVO
-  final bool verificationCodeSent; // NUEVO
+  final List<Reference> references; 
+  final int verifiedCount; // NUEVO
+  final bool verificationCodeSent; 
 
   const SecurityState({
     this.isLoading = false,
@@ -15,8 +16,9 @@ class SecurityState extends Equatable {
     this.error,
     this.verification,
     this.blockedUsers = const [],
-    this.references = const [], // NUEVO
-    this.verificationCodeSent = false, // NUEVO
+    this.references = const [], 
+    this.verifiedCount = 0, // NUEVO
+    this.verificationCodeSent = false, 
   });
 
   SecurityState copyWith({
@@ -25,8 +27,9 @@ class SecurityState extends Equatable {
     String? error,
     Verification? verification,
     List<UserBlock>? blockedUsers,
-    List<Reference>? references, // NUEVO
-    bool? verificationCodeSent, // NUEVO
+    List<Reference>? references, 
+    int? verifiedCount, // NUEVO
+    bool? verificationCodeSent, 
   }) {
     return SecurityState(
       isLoading: isLoading ?? this.isLoading,
@@ -34,20 +37,21 @@ class SecurityState extends Equatable {
       error: error,
       verification: verification ?? this.verification,
       blockedUsers: blockedUsers ?? this.blockedUsers,
-      references: references ?? this.references, // NUEVO
-      verificationCodeSent: verificationCodeSent ?? this.verificationCodeSent, // NUEVO
+      references: references ?? this.references, 
+      verifiedCount: verifiedCount ?? this.verifiedCount, // NUEVO
+      verificationCodeSent:
+          verificationCodeSent ?? this.verificationCodeSent, 
     );
   }
 
-  // NUEVO: Getters útiles para referencias
-  List<Reference> get verifiedReferences => 
+  // Getters existentes (no se eliminan)
+  List<Reference> get verifiedReferences =>
       references.where((ref) => ref.isVerified).toList();
-  
-  List<Reference> get unverifiedReferences => 
+
+  List<Reference> get unverifiedReferences =>
       references.where((ref) => !ref.isVerified).toList();
-  
+
   int get totalReferences => references.length;
-  int get verifiedCount => verifiedReferences.length;
 
   @override
   List<Object?> get props => [
@@ -56,7 +60,8 @@ class SecurityState extends Equatable {
         error,
         verification,
         blockedUsers,
-        references, // NUEVO
-        verificationCodeSent, // NUEVO
+        references,
+        verifiedCount, // NUEVO
+        verificationCodeSent,
       ];
 }
