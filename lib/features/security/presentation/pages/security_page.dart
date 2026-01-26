@@ -39,15 +39,25 @@ class _SecurityPageState extends State<SecurityPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Verificación y Seguridad')),
       body: BlocBuilder<SecurityBloc, SecurityState>(
+        // 🔥 SOLUCIÓN: buildWhen para prevenir rebuilds innecesarios
+        buildWhen: (previous, current) {
+          // Solo rebuild si cambian datos relevantes
+          return previous.isLoading != current.isLoading ||
+                 previous.isActionLoading != current.isActionLoading ||
+                 previous.verification != current.verification ||
+                 previous.blockedUsers != current.blockedUsers ||
+                 previous.references != current.references ||
+                 previous.verifiedCount != current.verifiedCount ||
+                 previous.error != current.error;
+        },
         builder: (context, state) {
-          if (!state.isLoading && state.verification == null && state.blockedUsers.isEmpty) {
-            context.read<SecurityBloc>().add(SecurityLoadRequested(userId: userId));
-          }
-
+          // 🔥 ELIMINADO: La condición que causaba el loop infinito
+          // Ya no se dispara el evento desde aquí
+          
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // ===== SECCIÓN DE REFERENCIAS (NUEVO) =====
+              // ===== SECCIÓN DE REFERENCIAS =====
               _Section(
                 title: 'Referencias de Convivencia',
                 child: Column(
@@ -208,7 +218,26 @@ class _SecurityPageState extends State<SecurityPage> {
               ),
               if (state.error != null) ...[
                 const SizedBox(height: 16),
-                Text(state.error!, style: const TextStyle(color: Colors.red)),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          state.error!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ],
           );

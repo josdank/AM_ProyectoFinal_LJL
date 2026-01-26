@@ -6,9 +6,9 @@ class SecurityState extends Equatable {
   final String? error;
   final Verification? verification;
   final List<UserBlock> blockedUsers;
-  final List<Reference> references; 
-  final int verifiedCount; // NUEVO
-  final bool verificationCodeSent; 
+  final List<Reference> references;
+  final int verifiedCount;
+  final bool verificationCodeSent;
 
   const SecurityState({
     this.isLoading = false,
@@ -16,35 +16,42 @@ class SecurityState extends Equatable {
     this.error,
     this.verification,
     this.blockedUsers = const [],
-    this.references = const [], 
-    this.verifiedCount = 0, // NUEVO
-    this.verificationCodeSent = false, 
+    this.references = const [],
+    this.verifiedCount = 0,
+    this.verificationCodeSent = false,
   });
 
+  // 🔥 CORREGIDO: copyWith con manejo correcto de nullable values
   SecurityState copyWith({
     bool? isLoading,
     bool? isActionLoading,
-    String? error,
+    String? error, // 🔥 PROBLEMA: No puedes resetear a null con esta sintaxis
     Verification? verification,
     List<UserBlock>? blockedUsers,
-    List<Reference>? references, 
-    int? verifiedCount, // NUEVO
-    bool? verificationCodeSent, 
+    List<Reference>? references,
+    int? verifiedCount,
+    bool? verificationCodeSent,
+    // 🔥 NUEVO: Flags explícitos para resetear valores
+    bool clearError = false,
+    bool clearVerificationCodeSent = false,
   }) {
     return SecurityState(
       isLoading: isLoading ?? this.isLoading,
       isActionLoading: isActionLoading ?? this.isActionLoading,
-      error: error,
+      // 🔥 CORREGIDO: Si clearError es true, usar null, sino usar el valor pasado o el actual
+      error: clearError ? null : (error ?? this.error),
       verification: verification ?? this.verification,
       blockedUsers: blockedUsers ?? this.blockedUsers,
-      references: references ?? this.references, 
-      verifiedCount: verifiedCount ?? this.verifiedCount, // NUEVO
-      verificationCodeSent:
-          verificationCodeSent ?? this.verificationCodeSent, 
+      references: references ?? this.references,
+      verifiedCount: verifiedCount ?? this.verifiedCount,
+      // 🔥 CORREGIDO: Si clearVerificationCodeSent es true, usar false
+      verificationCodeSent: clearVerificationCodeSent 
+          ? false 
+          : (verificationCodeSent ?? this.verificationCodeSent),
     );
   }
 
-  // Getters existentes (no se eliminan)
+  // Getters existentes
   List<Reference> get verifiedReferences =>
       references.where((ref) => ref.isVerified).toList();
 
@@ -61,7 +68,7 @@ class SecurityState extends Equatable {
         verification,
         blockedUsers,
         references,
-        verifiedCount, // NUEVO
+        verifiedCount,
         verificationCodeSent,
       ];
 }

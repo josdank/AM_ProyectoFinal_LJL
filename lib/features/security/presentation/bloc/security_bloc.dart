@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart'; // 🔥 PARA LOGS
 import '../../domain/entities/user_block.dart';
 import '../../domain/entities/verification.dart';
 import '../../domain/usecases/block_user.dart';
@@ -32,6 +33,9 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
   final SendVerificationCode sendVerificationCode;
   final VerifyReference verifyReference;
 
+  // 🔥 CONTADOR DE CARGAS PARA DEBUGGING
+  int _loadCount = 0;
+
   SecurityBloc({
     required this.getVerificationStatus,
     required this.submitVerification,
@@ -56,17 +60,37 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     on<SecurityVerifyReferenceRequested>(_onVerifyReference);
   }
 
-  // ✅ MÉTODO CORREGIDO: Sin nested folds
   Future<void> _onLoad(
     SecurityLoadRequested event,
     Emitter<SecurityState> emit,
   ) async {
-    // 🔥 IMPORTANTE: Evitar cargas múltiples simultáneas
+    _loadCount++;
+    
+    // 🔥 LOG CRÍTICO
+    if (kDebugMode) {
+      print('🔴 SecurityBloc._onLoad LLAMADO #$_loadCount');
+      print('   - isLoading actual: ${state.isLoading}');
+      print('   - userId: ${event.userId}');
+      print('   - StackTrace: ${StackTrace.current.toString().split('\n').take(5).join('\n')}');
+    }
+
+    // PREVENIR CARGAS MÚLTIPLES
     if (state.isLoading) {
+      if (kDebugMode) {
+        print('⚠️  Ya está cargando, IGNORANDO carga #$_loadCount');
+      }
       return;
     }
 
-    emit(state.copyWith(isLoading: true, error: null));
+    if (kDebugMode) {
+      print('✅ Iniciando carga #$_loadCount');
+    }
+
+    emit(state.copyWith(
+      isLoading: true,
+      clearError: true,
+      clearVerificationCodeSent: true,
+    ));
 
     try {
       // Cargar verificación
@@ -76,10 +100,13 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
       );
       verRes.fold(
         (failure) {
-          // No es crítico si falla
+          if (kDebugMode) print('⚠️  Verificación falló: ${failure.message}');
           verification = null;
         },
-        (ver) => verification = ver,
+        (ver) {
+          if (kDebugMode) print('✅ Verificación cargada');
+          verification = ver;
+        },
       );
 
       // Cargar usuarios bloqueados
@@ -89,10 +116,13 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
       );
       blockedRes.fold(
         (failure) {
-          // No es crítico si falla
+          if (kDebugMode) print('⚠️  Bloqueados falló: ${failure.message}');
           blockedUsers = [];
         },
-        (blocked) => blockedUsers = blocked,
+        (blocked) {
+          if (kDebugMode) print('✅ Bloqueados cargados: ${blocked.length}');
+          blockedUsers = blocked;
+        },
       );
 
       // Cargar referencias
@@ -102,29 +132,46 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
       );
       referencesRes.fold(
         (failure) {
-          // No es crítico si falla
+          if (kDebugMode) print('⚠️  Referencias falló: ${failure.message}');
           references = [];
         },
-        (refs) => references = refs,
+        (refs) {
+          if (kDebugMode) print('✅ Referencias cargadas: ${refs.length}');
+          references = refs;
+        },
       );
 
-      // Calcular referencias verificadas
       final verifiedCount = references.where((r) => r.verified).length;
 
-      // ✅ Emitir estado exitoso con toda la data
+      if (kDebugMode) {
+        print('📊 Emitiendo estado exitoso:');
+        print('   - Referencias: ${references.length}');
+        print('   - Verificadas: $verifiedCount');
+        print('   - Bloqueados: ${blockedUsers.length}');
+      }
+
       emit(state.copyWith(
         isLoading: false,
         verification: verification,
         blockedUsers: blockedUsers,
         references: references,
         verifiedCount: verifiedCount,
-        error: null,
+        clearError: true,
+        clearVerificationCodeSent: true,
       ));
+
+      if (kDebugMode) {
+        print('✅ Carga #$_loadCount COMPLETADA');
+      }
     } catch (e) {
-      // ✅ IMPORTANTE: Emitir error pero NO recargar automáticamente
+      if (kDebugMode) {
+        print('❌ Error en carga #$_loadCount: $e');
+      }
+      
       emit(state.copyWith(
         isLoading: false,
         error: 'Error al cargar datos de seguridad: $e',
+        clearVerificationCodeSent: true,
       ));
     }
   }
@@ -133,7 +180,10 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     SecuritySubmitVerificationRequested event,
     Emitter<SecurityState> emit,
   ) async {
-    emit(state.copyWith(isActionLoading: true, error: null));
+    emit(state.copyWith(
+      isActionLoading: true,
+      clearError: true,
+    ));
     
     final res = await submitVerification(
       SubmitVerificationParams(userId: event.userId, type: event.type),
@@ -149,7 +199,10 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     SecurityReportUserRequested event,
     Emitter<SecurityState> emit,
   ) async {
-    emit(state.copyWith(isActionLoading: true, error: null));
+    emit(state.copyWith(
+      isActionLoading: true,
+      clearError: true,
+    ));
     
     final res = await reportUser(ReportUserParams(
       reporterId: event.reporterId,
@@ -168,7 +221,10 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     SecurityBlockUserRequested event,
     Emitter<SecurityState> emit,
   ) async {
-    emit(state.copyWith(isActionLoading: true, error: null));
+    emit(state.copyWith(
+      isActionLoading: true,
+      clearError: true,
+    ));
     
     final res = await blockUser(
       BlockUserParams(blockerId: event.blockerId, blockedId: event.blockedId),
@@ -177,20 +233,22 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
       (_) {
-        // ✅ Recargar después de bloquear exitosamente
         emit(state.copyWith(isActionLoading: false));
         add(SecurityLoadRequested(userId: event.blockerId));
       },
     );
   }
 
-  // ===== REFERENCIAS =====
-
   Future<void> _onAddReference(
     SecurityAddReferenceRequested event,
     Emitter<SecurityState> emit,
   ) async {
-    emit(state.copyWith(isActionLoading: true, error: null));
+    if (kDebugMode) print('🔵 AddReference iniciado');
+    
+    emit(state.copyWith(
+      isActionLoading: true,
+      clearError: true,
+    ));
     
     final res = await addReference(AddReferenceParams(
       userId: event.userId,
@@ -205,6 +263,7 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
       (_) {
+        if (kDebugMode) print('🔵 AddReference exitoso, recargando...');
         emit(state.copyWith(isActionLoading: false));
         add(SecurityLoadRequested(userId: event.userId));
       },
@@ -215,7 +274,12 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     SecurityUpdateReferenceRequested event,
     Emitter<SecurityState> emit,
   ) async {
-    emit(state.copyWith(isActionLoading: true, error: null));
+    if (kDebugMode) print('🔵 UpdateReference iniciado');
+    
+    emit(state.copyWith(
+      isActionLoading: true,
+      clearError: true,
+    ));
     
     final res = await updateReference(
       UpdateReferenceParams(reference: event.reference),
@@ -224,6 +288,7 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
       (_) {
+        if (kDebugMode) print('🔵 UpdateReference exitoso, recargando...');
         emit(state.copyWith(isActionLoading: false));
         add(SecurityLoadRequested(userId: event.userId));
       },
@@ -234,7 +299,12 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     SecurityDeleteReferenceRequested event,
     Emitter<SecurityState> emit,
   ) async {
-    emit(state.copyWith(isActionLoading: true, error: null));
+    if (kDebugMode) print('🔵 DeleteReference iniciado');
+    
+    emit(state.copyWith(
+      isActionLoading: true,
+      clearError: true,
+    ));
     
     final res = await deleteReference(
       DeleteReferenceParams(referenceId: event.referenceId),
@@ -243,6 +313,7 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
       (_) {
+        if (kDebugMode) print('🔵 DeleteReference exitoso, recargando...');
         emit(state.copyWith(isActionLoading: false));
         add(SecurityLoadRequested(userId: event.userId));
       },
@@ -253,7 +324,10 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     SecuritySendVerificationCodeRequested event,
     Emitter<SecurityState> emit,
   ) async {
-    emit(state.copyWith(isActionLoading: true, error: null));
+    emit(state.copyWith(
+      isActionLoading: true,
+      clearError: true,
+    ));
     
     final res = await sendVerificationCode(SendVerificationCodeParams(
       referenceId: event.referenceId,
@@ -275,7 +349,12 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     SecurityVerifyReferenceRequested event,
     Emitter<SecurityState> emit,
   ) async {
-    emit(state.copyWith(isActionLoading: true, error: null));
+    if (kDebugMode) print('🔵 VerifyReference iniciado');
+    
+    emit(state.copyWith(
+      isActionLoading: true,
+      clearError: true,
+    ));
     
     final res = await verifyReference(VerifyReferenceParams(
       referenceId: event.referenceId,
@@ -285,6 +364,7 @@ class SecurityBloc extends Bloc<SecurityEvent, SecurityState> {
     res.fold(
       (l) => emit(state.copyWith(isActionLoading: false, error: l.message)),
       (_) {
+        if (kDebugMode) print('🔵 VerifyReference exitoso, recargando...');
         emit(state.copyWith(isActionLoading: false));
         add(SecurityLoadRequested(userId: event.userId));
       },

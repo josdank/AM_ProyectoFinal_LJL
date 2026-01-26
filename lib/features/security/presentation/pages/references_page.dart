@@ -13,22 +13,6 @@ class ReferencesPage extends StatefulWidget {
 }
 
 class _ReferencesPageState extends State<ReferencesPage> {
-  void _loadData() {
-    final authState = context.read<AuthBloc>().state;
-    final userId = authState is AuthAuthenticated ? authState.user.id : null;
-    if (userId != null) {
-      context.read<SecurityBloc>().add(SecurityLoadRequested(userId: userId));
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = context.read<AuthBloc>().state;
@@ -52,7 +36,16 @@ class _ReferencesPageState extends State<ReferencesPage> {
         ],
       ),
       body: BlocConsumer<SecurityBloc, SecurityState>(
+        // 🔥 CRÍTICO: buildWhen previene rebuilds innecesarios
+        buildWhen: (previous, current) {
+          // Solo rebuild si cambian las referencias, loading, o error
+          return previous.references != current.references ||
+                 previous.isLoading != current.isLoading ||
+                 previous.error != current.error ||
+                 previous.verifiedCount != current.verifiedCount;
+        },
         listener: (context, state) {
+          // Solo mostrar mensajes, NUNCA recargar aquí
           if (state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -72,7 +65,8 @@ class _ReferencesPageState extends State<ReferencesPage> {
           }
         },
         builder: (context, state) {
-          if (state.isLoading) {
+          // 🔥 CORRECCIÓN: Solo mostrar loading en carga inicial
+          if (state.isLoading && state.references.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -81,6 +75,8 @@ class _ReferencesPageState extends State<ReferencesPage> {
               context.read<SecurityBloc>().add(
                 SecurityLoadRequested(userId: userId),
               );
+              // Esperar a que termine la carga
+              await Future.delayed(const Duration(milliseconds: 500));
             },
             child: CustomScrollView(
               slivers: [
@@ -454,6 +450,7 @@ class _ReferencesPageState extends State<ReferencesPage> {
   }
 }
 
+// 🔥 FORMULARIO SIN CAMBIOS
 class _ReferenceFormSheet extends StatefulWidget {
   final String userId;
   final Reference? reference;
