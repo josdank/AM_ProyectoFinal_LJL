@@ -36,16 +36,7 @@ class _ReferencesPageState extends State<ReferencesPage> {
         ],
       ),
       body: BlocConsumer<SecurityBloc, SecurityState>(
-        // 🔥 CRÍTICO: buildWhen previene rebuilds innecesarios
-        buildWhen: (previous, current) {
-          // Solo rebuild si cambian las referencias, loading, o error
-          return previous.references != current.references ||
-                 previous.isLoading != current.isLoading ||
-                 previous.error != current.error ||
-                 previous.verifiedCount != current.verifiedCount;
-        },
         listener: (context, state) {
-          // Solo mostrar mensajes, NUNCA recargar aquí
           if (state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -65,7 +56,6 @@ class _ReferencesPageState extends State<ReferencesPage> {
           }
         },
         builder: (context, state) {
-          // 🔥 CORRECCIÓN: Solo mostrar loading en carga inicial
           if (state.isLoading && state.references.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -75,17 +65,14 @@ class _ReferencesPageState extends State<ReferencesPage> {
               context.read<SecurityBloc>().add(
                 SecurityLoadRequested(userId: userId),
               );
-              // Esperar a que termine la carga
               await Future.delayed(const Duration(milliseconds: 500));
             },
             child: CustomScrollView(
               slivers: [
-                // Estadísticas
                 SliverToBoxAdapter(
                   child: _buildStatsSection(context, state),
                 ),
 
-                // Lista de referencias
                 if (state.references.isEmpty)
                   SliverFillRemaining(
                     child: _buildEmptyState(context, userId),
@@ -450,7 +437,6 @@ class _ReferencesPageState extends State<ReferencesPage> {
   }
 }
 
-// 🔥 FORMULARIO SIN CAMBIOS
 class _ReferenceFormSheet extends StatefulWidget {
   final String userId;
   final Reference? reference;

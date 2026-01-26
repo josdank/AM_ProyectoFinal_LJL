@@ -11,7 +11,7 @@ class VerificationModel extends Verification {
   factory VerificationModel.fromJson(Map<String, dynamic> json) {
     return VerificationModel(
       userId: json['user_id'] as String,
-      type: (json['type'] as String?) ?? 'estudiante',
+      type: (json['verification_type'] as String?) ?? 'estudiante',
       status: (json['status'] as String?) ?? 'pending',
       createdAt: DateTime.parse(json['created_at'] as String),
     );
@@ -19,7 +19,7 @@ class VerificationModel extends Verification {
 
   Map<String, dynamic> toInsertJson() => {
         'user_id': userId,
-        'type': type,
+        'verification_type': type,
         'status': status,
       };
 }
