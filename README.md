@@ -8,14 +8,6 @@
 
 ---
 
-## 📱 **Descarga Directa**
-
-### ⬇️ [Descargar APK (Última Versión)](https://github.com/tuusuario/LJL-Roommates/releases/latest/download/app-release.apk)
-
-> **Nota:** Para instalar en Android, necesitas permitir "Instalación desde fuentes desconocidas" en configuración → Seguridad.
-
----
-
 ## ✨ **Características Principales**
 
 ### 👤 **Para Arrendatarios**
