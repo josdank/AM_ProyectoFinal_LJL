@@ -19,9 +19,7 @@ class _ReferencesPageState extends State<ReferencesPage> {
     final userId = authState is AuthAuthenticated ? authState.user.id : null;
 
     if (userId == null) {
-      return const Scaffold(
-        body: Center(child: Text('No autenticado')),
-      );
+      return const Scaffold(body: Center(child: Text('No autenticado')));
     }
 
     return Scaffold(
@@ -45,7 +43,7 @@ class _ReferencesPageState extends State<ReferencesPage> {
               ),
             );
           }
-          
+
           if (state.verificationCodeSent) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -69,35 +67,32 @@ class _ReferencesPageState extends State<ReferencesPage> {
             },
             child: CustomScrollView(
               slivers: [
-                SliverToBoxAdapter(
-                  child: _buildStatsSection(context, state),
-                ),
+                SliverToBoxAdapter(child: _buildStatsSection(context, state)),
 
                 if (state.references.isEmpty)
-                  SliverFillRemaining(
-                    child: _buildEmptyState(context, userId),
-                  )
+                  SliverFillRemaining(child: _buildEmptyState(context, userId))
                 else
                   SliverPadding(
                     padding: const EdgeInsets.all(16),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final reference = state.references[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: ReferenceCardWidget(
-                              reference: reference,
-                              userId: userId,
-                              onEdit: () => _editReference(context, userId, reference),
-                              onDelete: () => _deleteReference(context, userId, reference),
-                              onVerify: () => _verifyReference(context, userId, reference),
-                              onSendCode: () => _sendVerificationCode(context, reference),
-                            ),
-                          );
-                        },
-                        childCount: state.references.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final reference = state.references[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ReferenceCardWidget(
+                            reference: reference,
+                            userId: userId,
+                            onEdit: () =>
+                                _editReference(context, userId, reference),
+                            onDelete: () =>
+                                _deleteReference(context, userId, reference),
+                            onVerify: () =>
+                                _verifyReference(context, userId, reference),
+                            onSendCode: () =>
+                                _sendVerificationCode(context, reference),
+                          ),
+                        );
+                      }, childCount: state.references.length),
                     ),
                   ),
               ],
@@ -192,10 +187,7 @@ class _ReferencesPageState extends State<ReferencesPage> {
         ),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
         ),
       ],
     );
@@ -208,11 +200,7 @@ class _ReferencesPageState extends State<ReferencesPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.person_search,
-              size: 100,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.person_search, size: 100, color: Colors.grey[400]),
             const SizedBox(height: 24),
             Text(
               'No tienes referencias aún',
@@ -242,62 +230,83 @@ class _ReferencesPageState extends State<ReferencesPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _ReferenceFormSheet(
-        userId: userId,
-        onSubmit: (data) {
-          context.read<SecurityBloc>().add(
-                SecurityAddReferenceRequested(
-                  userId: userId,
-                  refereeName: data['name']!,
-                  refereeEmail: data['email']!,
-                  refereePhone: data['phone']!,
-                  relationship: data['relationship']!,
-                  comments: data['comments'],
-                  rating: data['rating'] != null ? int.tryParse(data['rating']!) : null,
-                ),
-              );
-        },
+      builder: (modalContext) => BlocProvider.value(
+        // ✅ AGREGAR ESTO
+        value: context.read<SecurityBloc>(), // ✅ Pasar el Bloc al modal
+        child: _ReferenceFormSheet(
+          userId: userId,
+          onSubmit: (data) {
+            // ✅ Usar el context CORRECTO (el del modal)
+            modalContext.read<SecurityBloc>().add(
+              SecurityAddReferenceRequested(
+                userId: userId,
+                refereeName: data['name']!,
+                refereeEmail: data['email']!,
+                refereePhone: data['phone']!,
+                relationship: data['relationship']!,
+                comments: data['comments'],
+                rating: data['rating'] != null
+                    ? int.tryParse(data['rating']!)
+                    : null,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  void _editReference(BuildContext context, String userId, Reference reference) {
+  void _editReference(
+    BuildContext context,
+    String userId,
+    Reference reference,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _ReferenceFormSheet(
-        userId: userId,
-        reference: reference,
-        onSubmit: (data) {
-          final updatedReference = Reference(
-            id: reference.id,
-            userId: reference.userId,
-            refereeName: data['name']!,
-            refereeEmail: data['email']!,
-            refereePhone: data['phone']!,
-            relationship: data['relationship']!,
-            comments: data['comments'],
-            rating: data['rating'] != null ? int.tryParse(data['rating']!) : null,
-            verified: reference.verified,
-            verificationCode: reference.verificationCode,
-            codeExpiresAt: reference.codeExpiresAt,
-            createdAt: reference.createdAt,
-            updatedAt: DateTime.now(),
-          );
+      builder: (modalContext) => BlocProvider.value(
+        // ✅ AGREGAR
+        value: context.read<SecurityBloc>(),
+        child: _ReferenceFormSheet(
+          userId: userId,
+          reference: reference,
+          onSubmit: (data) {
+            final updatedReference = Reference(
+              id: reference.id,
+              userId: reference.userId,
+              refereeName: data['name']!,
+              refereeEmail: data['email']!,
+              refereePhone: data['phone']!,
+              relationship: data['relationship']!,
+              comments: data['comments'],
+              rating: data['rating'] != null
+                  ? int.tryParse(data['rating']!)
+                  : null,
+              verified: reference.verified,
+              verificationCode: reference.verificationCode,
+              codeExpiresAt: reference.codeExpiresAt,
+              createdAt: reference.createdAt,
+              updatedAt: DateTime.now(),
+            );
 
-          context.read<SecurityBloc>().add(
-                SecurityUpdateReferenceRequested(
-                  userId: userId,
-                  reference: updatedReference,
-                ),
-              );
-        },
+            modalContext.read<SecurityBloc>().add(
+              SecurityUpdateReferenceRequested(
+                userId: userId,
+                reference: updatedReference,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  void _deleteReference(BuildContext context, String userId, Reference reference) {
+  void _deleteReference(
+    BuildContext context,
+    String userId,
+    Reference reference,
+  ) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -314,15 +323,13 @@ class _ReferencesPageState extends State<ReferencesPage> {
             onPressed: () {
               Navigator.pop(dialogContext);
               context.read<SecurityBloc>().add(
-                    SecurityDeleteReferenceRequested(
-                      userId: userId,
-                      referenceId: reference.id,
-                    ),
-                  );
+                SecurityDeleteReferenceRequested(
+                  userId: userId,
+                  referenceId: reference.id,
+                ),
+              );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Eliminar'),
           ),
         ],
@@ -332,60 +339,69 @@ class _ReferencesPageState extends State<ReferencesPage> {
 
   void _sendVerificationCode(BuildContext context, Reference reference) {
     context.read<SecurityBloc>().add(
-          SecuritySendVerificationCodeRequested(
-            referenceId: reference.id,
-            refereeEmail: reference.refereeEmail,
-          ),
-        );
+      SecuritySendVerificationCodeRequested(
+        referenceId: reference.id,
+        refereeEmail: reference.refereeEmail,
+      ),
+    );
   }
 
-  void _verifyReference(BuildContext context, String userId, Reference reference) {
+  void _verifyReference(
+    BuildContext context,
+    String userId,
+    Reference reference,
+  ) {
     final codeController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Verificar referencia'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Ingresa el código que ${reference.refereeName} recibió por email',
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: codeController,
-              decoration: const InputDecoration(
-                labelText: 'Código de verificación',
-                hintText: '123456',
+      builder: (dialogContext) => BlocProvider.value(
+        // ✅ AGREGAR
+        value: context.read<SecurityBloc>(),
+        child: AlertDialog(
+          title: const Text('Verificar referencia'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Ingresa el código que ${reference.refereeName} recibió por email',
               ),
-              keyboardType: TextInputType.number,
-              maxLength: 6,
+              const SizedBox(height: 16),
+              TextField(
+                controller: codeController,
+                decoration: const InputDecoration(
+                  labelText: 'Código de verificación',
+                  hintText: '123456',
+                ),
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final code = codeController.text.trim();
+                if (code.isNotEmpty) {
+                  Navigator.pop(dialogContext);
+                  dialogContext.read<SecurityBloc>().add(
+                    // ✅ Usar dialogContext
+                    SecurityVerifyReferenceRequested(
+                      userId: userId,
+                      referenceId: reference.id,
+                      code: code,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Verificar'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final code = codeController.text.trim();
-              if (code.isNotEmpty) {
-                Navigator.pop(dialogContext);
-                context.read<SecurityBloc>().add(
-                      SecurityVerifyReferenceRequested(
-                        userId: userId,
-                        referenceId: reference.id,
-                        code: code,
-                      ),
-                    );
-              }
-            },
-            child: const Text('Verificar'),
-          ),
-        ],
       ),
     );
   }
@@ -404,7 +420,9 @@ class _ReferencesPageState extends State<ReferencesPage> {
                 '1. Agrega referencias',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text('Personas que puedan hablar sobre tu experiencia como compañero de cuarto.'),
+              Text(
+                'Personas que puedan hablar sobre tu experiencia como compañero de cuarto.',
+              ),
               SizedBox(height: 12),
               Text(
                 '2. Envía código de verificación',
@@ -416,13 +434,17 @@ class _ReferencesPageState extends State<ReferencesPage> {
                 '3. Verifica la referencia',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text('Ingresa el código para marcar la referencia como verificada.'),
+              Text(
+                'Ingresa el código para marcar la referencia como verificada.',
+              ),
               SizedBox(height: 12),
               Text(
                 '4. Incrementa tu confianza',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text('Las referencias verificadas aumentan la confianza de otros usuarios.'),
+              Text(
+                'Las referencias verificadas aumentan la confianza de otros usuarios.',
+              ),
             ],
           ),
         ),
@@ -502,7 +524,9 @@ class _ReferenceFormSheetState extends State<_ReferenceFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                widget.reference == null ? 'Agregar Referencia' : 'Editar Referencia',
+                widget.reference == null
+                    ? 'Agregar Referencia'
+                    : 'Editar Referencia',
                 style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
@@ -557,14 +581,8 @@ class _ReferenceFormSheetState extends State<_ReferenceFormSheet> {
                     value: 'landlord',
                     child: Text('Propietario anterior'),
                   ),
-                  DropdownMenuItem(
-                    value: 'family',
-                    child: Text('Familiar'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'friend',
-                    child: Text('Amigo'),
-                  ),
+                  DropdownMenuItem(value: 'family', child: Text('Familiar')),
+                  DropdownMenuItem(value: 'friend', child: Text('Amigo')),
                 ],
                 onChanged: (value) => setState(() => _relationship = value!),
               ),

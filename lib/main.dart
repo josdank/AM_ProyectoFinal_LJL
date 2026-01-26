@@ -209,9 +209,8 @@ class _HomePageContent extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Busca Compañero'),
         centerTitle: true,
-        toolbarHeight: 60, // Altura fija para mejor manejo táctil
+        toolbarHeight: 60,
         actions: [
-          // Botones con mejor área táctil
           _buildAppBarIconButton(
             icon: Icons.map,
             tooltip: 'Mapa de Viviendas',
@@ -240,77 +239,87 @@ class _HomePageContent extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        top: false, // Ya estamos dentro de un SafeAreaWrapper
+        top: false,
         bottom: true,
         left: true,
         right: true,
-        child: BlocBuilder<ProfileBloc, ProfileState>(
-          builder: (context, profileState) {
-            if (profileState is ProfileLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, authState) {
+            // NUEVO: Obtener roles del usuario autenticado
+            final userRoles = authState is AuthAuthenticated
+                ? authState.user.roles
+                : <String>[];
 
-            if (profileState is ProfileError) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 40),
-                      const Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Colors.red,
-                      ),
-                      const SizedBox(height: 16),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          profileState.message,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 16,
+            return BlocBuilder<ProfileBloc, ProfileState>(
+              builder: (context, profileState) {
+                if (profileState is ProfileLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (profileState is ProfileError) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 40),
+                          const Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.red,
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: () => context.read<ProfileBloc>().add(
-                          ProfileLoadRequested(userId: userId),
-                        ),
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Reintentar'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Text(
+                              profileState.message,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: () => context.read<ProfileBloc>().add(
+                              ProfileLoadRequested(userId: userId),
+                            ),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Reintentar'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              );
-            }
+                    ),
+                  );
+                }
 
-            if (profileState is ProfileLoaded) {
-              return HomeDashboardPage(
-                email: email,
-                isProfileComplete: profileState.profile.isProfileComplete,
-                onProfile: () => _navigateToProfile(context),
-                onListings: () => _navigateToListings(context),
-                onConnections: () => _navigateToConnections(context),
-                onMatches: () => _navigateToMatches(context),
-                onSecurity: () => _navigateToSecurity(context),
-                onNotifications: () => _navigateToNotifications(context),
-                onMap: () => _navigateToMap(context),
-                onMyProperties: () => _navigateToMyProperties(context), // NUEVO
-              );
-            }
+                if (profileState is ProfileLoaded) {
+                  return HomeDashboardPage(
+                    email: email,
+                    isProfileComplete: profileState.profile.isProfileComplete,
+                    roles: userRoles, // NUEVO: Pasar los roles
+                    onProfile: () => _navigateToProfile(context),
+                    onListings: () => _navigateToListings(context),
+                    onConnections: () => _navigateToConnections(context),
+                    onMatches: () => _navigateToMatches(context),
+                    onSecurity: () => _navigateToSecurity(context),
+                    onNotifications: () => _navigateToNotifications(context),
+                    onMap: () => _navigateToMap(context),
+                    onMyProperties: () => _navigateToMyProperties(context),
+                  );
+                }
 
-            return const Center(child: Text('Estado desconocido'));
+                return const Center(child: Text('Estado desconocido'));
+              },
+            );
           },
         ),
       ),

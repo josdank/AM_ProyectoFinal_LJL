@@ -4,6 +4,7 @@ import '../../../../core/theme/ljl_theme.dart';
 class HomeDashboardPage extends StatelessWidget {
   final String email;
   final bool isProfileComplete;
+  final List<String> roles; // NUEVO: Lista de roles del usuario
 
   final VoidCallback onProfile;
   final VoidCallback onListings;
@@ -12,21 +13,25 @@ class HomeDashboardPage extends StatelessWidget {
   final VoidCallback onSecurity;
   final VoidCallback onNotifications;
   final VoidCallback onMap;
-  final VoidCallback onMyProperties; // NUEVO
+  final VoidCallback onMyProperties;
 
   const HomeDashboardPage({
     super.key,
     required this.email,
     required this.isProfileComplete,
+    required this.roles, // NUEVO
     required this.onProfile,
     required this.onListings,
     required this.onConnections,
     required this.onMatches,
     required this.onSecurity,
     required this.onNotifications,
-    required this.onMap, // NUEVO
-    required this.onMyProperties, // NUEVO
+    required this.onMap,
+    required this.onMyProperties,
   });
+
+  // NUEVO: Método para verificar si el usuario es tenant
+  bool get isTenant => roles.contains('tenant');
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +40,11 @@ class HomeDashboardPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _BrandHero(email: email, isProfileComplete: isProfileComplete),
+          _BrandHero(
+            email: email,
+            isProfileComplete: isProfileComplete,
+            isTenant: isTenant, // NUEVO
+          ),
           const SizedBox(height: 14),
 
           // Fila de botones principales
@@ -61,34 +70,48 @@ class HomeDashboardPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          // NUEVO: Botón de Mis Propiedades y Mapa
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onMap,
-                  icon: const Icon(Icons.map),
-                  label: const Text('Ver Mapa'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: LjlColors.teal,
-                    foregroundColor: Colors.white,
+
+          // MODIFICADO: Mostrar botones de Mapa y Propiedades solo si es tenant
+          if (isTenant) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: onMap,
+                    icon: const Icon(Icons.map),
+                    label: const Text('Ver Mapa'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: LjlColors.teal,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onMyProperties, // NUEVO
-                  icon: const Icon(Icons.home),
-                  label: const Text('Mis Propiedades'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: LjlColors.gold,
-                    foregroundColor: LjlColors.navy,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: onMyProperties,
+                    icon: const Icon(Icons.home),
+                    label: const Text('Mis Propiedades'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: LjlColors.gold,
+                      foregroundColor: LjlColors.navy,
+                    ),
                   ),
                 ),
+              ],
+            ),
+          ] else ...[
+            // Si NO es tenant, solo mostrar el botón del mapa (opcional)
+            ElevatedButton.icon(
+              onPressed: onMap,
+              icon: const Icon(Icons.map),
+              label: const Text('Ver Mapa'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: LjlColors.teal,
+                foregroundColor: Colors.white,
               ),
-            ],
-          ),
+            ),
+          ],
 
           const SizedBox(height: 18),
           Text(
@@ -171,8 +194,13 @@ class HomeDashboardPage extends StatelessWidget {
 class _BrandHero extends StatelessWidget {
   final String email;
   final bool isProfileComplete;
+  final bool isTenant; // NUEVO
 
-  const _BrandHero({required this.email, required this.isProfileComplete});
+  const _BrandHero({
+    required this.email,
+    required this.isProfileComplete,
+    required this.isTenant, // NUEVO
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +291,14 @@ class _BrandHero extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _StatusPill(isProfileComplete: isProfileComplete),
+                      Row(
+                        children: [
+                          _StatusPill(isProfileComplete: isProfileComplete),
+                          const SizedBox(width: 8),
+                          // NUEVO: Mostrar badge de rol tenant
+                          if (isTenant) _RolePill(role: 'Arrendatario'),
+                        ],
+                      ),
                       const SizedBox(height: 10),
                       Text(
                         'Comparte · Vive · Conecta',
@@ -311,6 +346,44 @@ class _StatusPill extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             text,
+            style: TextStyle(
+              color: Colors.white.withOpacity(.92),
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              letterSpacing: .1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// NUEVO: Widget para mostrar el rol del usuario
+class _RolePill extends StatelessWidget {
+  final String role;
+  const _RolePill({required this.role});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(.20),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.blue.withOpacity(.30)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.home_work_outlined,
+            color: Colors.white.withOpacity(.92),
+            size: 14,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            role,
             style: TextStyle(
               color: Colors.white.withOpacity(.92),
               fontWeight: FontWeight.w900,

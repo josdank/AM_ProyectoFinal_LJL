@@ -51,6 +51,8 @@ class AppRouter {
           return HomeDashboardPage(
             email: user.email,
             isProfileComplete: user.isProfileComplete,
+            roles: user
+                .roles, // Asegúrate de que 'user' tiene la propiedad 'roles'
             onProfile: () => context.go('/profile'),
             onListings: () => context.go('/listings'),
             onConnections: () {

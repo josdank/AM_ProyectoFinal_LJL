@@ -1,4 +1,3 @@
-// lib/features/user_properties/presentation/pages/my_properties_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -143,18 +142,22 @@ class MyPropertiesPage extends StatelessWidget {
   }
 
   void _navigateToCreateProperty(BuildContext context) async {
-    final result = await Navigator.push(
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => const CreatePropertyPage(),
+        builder: (_) => BlocProvider.value(
+          value: context.read<UserPropertyBloc>(), // ✅ Pasar el Bloc existente
+          child: const CreatePropertyPage(),
+        ),
       ),
     );
 
+    // ✅ Recargar automáticamente si hubo éxito
     if (result == true && context.mounted) {
       final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
       context.read<UserPropertyBloc>().add(
-            UserPropertyLoadMyPropertiesRequested(ownerId: userId),
-          );
+        UserPropertyLoadMyPropertiesRequested(ownerId: userId),
+      );
     }
   }
 

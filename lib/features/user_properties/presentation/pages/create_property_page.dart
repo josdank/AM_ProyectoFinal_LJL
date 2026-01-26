@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/ljl_colors.dart';
 import '../../../geolocation/domain/entities/location_point.dart';
 import '../../../geolocation/presentation/pages/location_picker_page.dart';
@@ -79,14 +78,13 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
   }
 
   @override
+@override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<UserPropertyBloc>(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Registrar Propiedad'),
-        ),
-        body: BlocConsumer<UserPropertyBloc, UserPropertyState>(
+    return Scaffold( // ✅ SIN BlocProvider propio
+      appBar: AppBar(
+        title: const Text('Registrar Propiedad'),
+      ),
+      body: BlocConsumer<UserPropertyBloc, UserPropertyState>(
           listener: (context, state) {
             if (state is UserPropertyError) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -517,8 +515,7 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
             );
           },
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildSectionTitle(String title) {
@@ -587,13 +584,49 @@ class _CreatePropertyPageState extends State<CreatePropertyPage> {
   }
 
   Future<void> _pickImages() async {
-    final picker = ImagePicker();
-    final images = await picker.pickMultiImage();
+    // ✅ Mostrar diálogo para elegir origen
+    final source = await showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Agregar Imagen'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Tomar Foto'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Elegir de Galería'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
 
-    if (images.isNotEmpty) {
-      setState(() {
-        _selectedImagePaths = images.map((img) => img.path).toList();
-      });
+    if (source == null) return;
+
+    final picker = ImagePicker();
+
+    if (source == ImageSource.camera) {
+      // ✅ Tomar UNA foto con la cámara
+      final image = await picker.pickImage(source: ImageSource.camera);
+      if (image != null) {
+        setState(() {
+          _selectedImagePaths.add(image.path);
+        });
+      }
+    } else {
+      // ✅ Seleccionar MÚLTIPLES de la galería
+      final images = await picker.pickMultiImage();
+      if (images.isNotEmpty) {
+        setState(() {
+          _selectedImagePaths.addAll(images.map((img) => img.path));
+        });
+      }
     }
   }
 
