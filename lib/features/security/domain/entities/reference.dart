@@ -8,7 +8,7 @@ class Reference extends Equatable {
   final String refereeEmail; // Email del referente
   final String refereePhone; // Teléfono del referente
   final String relationship; // 'roommate', 'landlord', 'family', 'friend'
-  final String? comments; // Comentarios sobre la convivencia
+  final String? comment; // Comentarios sobre la convivencia
   final int? rating; // Rating de 1-5 (opcional)
   final bool verified; // Si la referencia fue verificada
   final String? verificationCode; // Código de verificación temporal
@@ -23,7 +23,7 @@ class Reference extends Equatable {
     required this.refereeEmail,
     required this.refereePhone,
     required this.relationship,
-    this.comments,
+    this.comment,
     this.rating,
     this.verified = false,
     this.verificationCode,
@@ -68,7 +68,7 @@ class Reference extends Equatable {
         refereeEmail,
         refereePhone,
         relationship,
-        comments,
+        comment,
         rating,
         verified,
         verificationCode,

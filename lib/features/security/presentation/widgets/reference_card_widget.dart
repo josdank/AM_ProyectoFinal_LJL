@@ -168,8 +168,8 @@ class ReferenceCardWidget extends StatelessWidget {
             ],
 
             // Comentarios si existen
-            if (reference.comments != null &&
-                reference.comments!.isNotEmpty) ...[
+            if (reference.comment != null &&
+                reference.comment!.isNotEmpty) ...[
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -195,7 +195,7 @@ class ReferenceCardWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      reference.comments!,
+                      reference.comment!,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[800],

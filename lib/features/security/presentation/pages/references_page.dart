@@ -310,7 +310,7 @@ class _ReferencesContentState extends State<_ReferencesContent> {
                 refereeEmail: data['email']!,
                 refereePhone: data['phone']!,
                 relationship: data['relationship']!,
-                comments: data['comments'],
+                comment: data['comment'],
                 rating: data['rating'] != null
                     ? int.tryParse(data['rating']!)
                     : null,
@@ -511,7 +511,7 @@ class _ReferenceFormSheetState extends State<_ReferenceFormSheet> {
       _emailController.text = widget.reference!.refereeEmail;
       _phoneController.text = widget.reference!.refereePhone;
       _relationship = widget.reference!.relationship;
-      _commentsController.text = widget.reference!.comments ?? '';
+      _commentsController.text = widget.reference!.comment ?? '';
       _rating = widget.reference!.rating;
     }
   }

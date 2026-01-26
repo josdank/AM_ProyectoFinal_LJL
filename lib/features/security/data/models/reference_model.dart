@@ -8,7 +8,7 @@ class ReferenceModel extends Reference {
     required super.refereeEmail,
     required super.refereePhone,
     required super.relationship,
-    super.comments,
+    super.comment,
     super.rating,
     super.verified,
     super.verificationCode,
@@ -25,7 +25,7 @@ class ReferenceModel extends Reference {
       refereeEmail: json['referee_email'] as String,
       refereePhone: json['referee_phone'] as String,
       relationship: json['relationship'] as String,
-      comments: json['comments'] as String?,
+      comment: json['comment'] as String?, // ✅ CORREGIDO
       rating: json['rating'] as int?,
       verified: (json['verified'] as bool?) ?? false,
       verificationCode: json['verification_code'] as String?,
@@ -44,7 +44,7 @@ class ReferenceModel extends Reference {
       'referee_email': refereeEmail,
       'referee_phone': refereePhone,
       'relationship': relationship,
-      'comments': comments,
+      'comment': comment, // ✅ CORREGIDO
       'rating': rating,
       'verified': verified,
     };
@@ -56,7 +56,7 @@ class ReferenceModel extends Reference {
       'referee_email': refereeEmail,
       'referee_phone': refereePhone,
       'relationship': relationship,
-      'comments': comments,
+      'comment': comment, // ✅ CORREGIDO
       'rating': rating,
     };
   }
